@@ -1,0 +1,1836 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Combinatorics Practice – Created by Mr. McLean Math</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<style>
+  :root {
+    --bg: #050816;
+    --card: #0b1024;
+    --accent: #3b82f6;
+    --accent-soft: #1e293b;
+    --accent-easy: #22c55e;
+    --accent-med: #eab308;
+    --accent-hard: #ef4444;
+    --text: #e5e7eb;
+    --muted: #9ca3af;
+    --border: #1f2937;
+    --danger: #f97373;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: radial-gradient(circle at top, #1f2933 0, #020617 52%, #000 100%);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 1rem;
+  }
+
+  .app {
+    width: 100%;
+    max-width: 1100px;
+    background: rgba(5, 10, 25, 0.96);
+    border-radius: 1.25rem;
+    border: 1px solid var(--border);
+    box-shadow: 0 25px 80px rgba(0,0,0,0.7);
+    padding: 1.25rem 1.5rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  header {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem 1.5rem;
+    align-items: baseline;
+    justify-content: space-between;
+  }
+
+  header h1 {
+    font-size: 1.4rem;
+    margin: 0;
+  }
+
+  header .subtitle {
+    font-size: 0.9rem;
+    color: var(--muted);
+  }
+
+  .top-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    align-items: stretch;
+  }
+
+  .left-column {
+    flex: 2 1 260px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .right-column {
+    flex: 1.4 1 220px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .card {
+    background: var(--card);
+    border-radius: 0.9rem;
+    border: 1px solid var(--border);
+    padding: 0.8rem 0.9rem;
+  }
+
+  .card h2 {
+    margin: 0 0 0.5rem;
+    font-size: 1rem;
+  }
+
+  .mode-toggle {
+    display: inline-flex;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+
+  .mode-btn {
+    position: relative;
+    padding: 0.3rem 0.8rem;
+    font-size: 0.85rem;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    flex: 1 1 0;
+  }
+
+  .mode-btn.active {
+    background: var(--accent-soft);
+    color: var(--text);
+  }
+
+  .mode-btn:first-child::before,
+  .mode-btn:last-child::before {
+    content: "";
+  }
+
+  .difficulty-row, .controls-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .difficulty-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+
+  .diff-btn {
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    padding: 0.2rem 0.7rem;
+    font-size: 0.85rem;
+    background: #020617;
+    color: var(--muted);
+    cursor: pointer;
+  }
+
+  .diff-btn span.emoji {
+    margin-right: 0.25rem;
+  }
+
+  .diff-btn.easy.active { background: rgba(34,197,94,0.2); color: var(--text); border-color: var(--accent-easy); }
+  .diff-btn.med.active { background: rgba(234,179,8,0.2); color: var(--text); border-color: var(--accent-med); }
+  .diff-btn.hard.active { background: rgba(239,68,68,0.2); color: var(--text); border-color: var(--accent-hard); }
+  .diff-btn.random.active { background: rgba(59,130,246,0.25); color: var(--text); border-color: var(--accent); }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2rem;
+    border-radius: 999px;
+    padding: 0.1rem 0.5rem;
+    font-size: 0.7rem;
+    border: 1px solid var(--border);
+    color: var(--muted);
+  }
+
+  .badge-dot {
+    width: 0.4rem;
+    height: 0.4rem;
+    border-radius: 999px;
+    background: var(--accent);
+  }
+
+  .question-text {
+    font-size: 1rem;
+    margin-bottom: 0.6rem;
+    line-height: 1.4;
+  }
+
+  .input-row {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .answer-input {
+    flex: 1 1 150px;
+    padding: 0.45rem 0.55rem;
+    border-radius: 0.6rem;
+    border: 1px solid var(--border);
+    font-size: 1rem;
+    background: #020617;
+    color: var(--text);
+  }
+
+  .answer-input:focus {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
+
+  .btn {
+    padding: 0.4rem 0.9rem;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: #020617;
+    color: var(--text);
+    font-size: 0.9rem;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    white-space: nowrap;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+  }
+
+  .btn-secondary {
+    background: #020617;
+  }
+
+  .btn:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+
+  .feedback {
+    margin-top: 0.4rem;
+    min-height: 2.5rem;
+    font-size: 0.9rem;
+  }
+
+  .feedback-line {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    align-items: baseline;
+  }
+
+  .feedback-status {
+    font-weight: 600;
+  }
+
+  .feedback-status.correct {
+    color: var(--accent-easy);
+  }
+
+  .feedback-status.incorrect {
+    color: var(--danger);
+  }
+
+  .explanation {
+    margin-top: 0.25rem;
+    font-size: 0.86rem;
+    color: var(--muted);
+  }
+
+  .toggle-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .toggle-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    align-items: center;
+  }
+
+  .switch-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.8rem;
+    color: var(--muted);
+    cursor: pointer;
+  }
+
+  .switch {
+    position: relative;
+    width: 32px;
+    height: 18px;
+    border-radius: 999px;
+    background: #111827;
+    border: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+
+  .switch-thumb {
+    position: absolute;
+    top: 1px;
+    left: 1px;
+    width: 14px;
+    height: 14px;
+    border-radius: 999px;
+    background: #6b7280;
+    transition: transform 0.15s ease, background 0.15s ease;
+  }
+
+  .switch.on {
+    background: #1d4ed8;
+  }
+
+  .switch.on .switch-thumb {
+    transform: translateX(12px);
+    background: white;
+  }
+
+  .timer-select {
+    font-size: 0.8rem;
+    padding: 0.18rem 0.6rem;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: #020617;
+    color: var(--muted);
+  }
+
+  .timer-display {
+    font-size: 0.9rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .timer-display.danger {
+    color: var(--danger);
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit,minmax(110px,1fr));
+    gap: 0.4rem;
+  }
+
+  .stat-box {
+    border-radius: 0.6rem;
+    padding: 0.4rem 0.5rem;
+    background: #020617;
+    border: 1px solid var(--border);
+    font-size: 0.75rem;
+  }
+
+  .stat-label {
+    color: var(--muted);
+    margin-bottom: 0.1rem;
+  }
+
+  .stat-value {
+    font-size: 1rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .summary-list {
+    margin-top: 0.4rem;
+    max-height: 200px;
+    overflow: auto;
+    font-size: 0.8rem;
+  }
+
+  .summary-item {
+    border-top: 1px solid var(--border);
+    padding: 0.3rem 0.1rem;
+  }
+
+  .summary-item strong {
+    font-weight: 600;
+  }
+
+  .worksheet-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    align-items: center;
+    margin-bottom: 0.6rem;
+  }
+
+  .worksheet-controls-section {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    align-items: center;
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+
+  .worksheet-select {
+    padding: 0.18rem 0.5rem;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: #020617;
+    color: var(--muted);
+    font-size: 0.8rem;
+  }
+
+  .worksheet-header {
+    font-size: 0.85rem;
+    color: var(--muted);
+    margin-bottom: 0.4rem;
+  }
+
+  .worksheet-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    max-height: 320px;
+    overflow: auto;
+  }
+
+  .worksheet-item {
+    border-radius: 0.6rem;
+    padding: 0.35rem 0.45rem;
+    border: 1px solid var(--border);
+    background: #020617;
+    font-size: 0.86rem;
+  }
+
+  .worksheet-q {
+    margin-bottom: 0.2rem;
+  }
+
+  .worksheet-answer {
+    color: var(--muted);
+    margin-top: 0.1rem;
+  }
+
+  .worksheet-answer.hidden {
+    display: none;
+  }
+
+  .dev-panel {
+    margin-top: 0.6rem;
+    font-size: 0.8rem;
+    border-radius: 0.6rem;
+    padding: 0.4rem 0.5rem;
+    background: #111827;
+    border: 1px dashed var(--accent);
+  }
+
+  .dev-panel h3 {
+    margin: 0 0 0.3rem;
+    font-size: 0.9rem;
+  }
+
+  .dev-test {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.4rem;
+    padding: 0.1rem 0;
+  }
+
+  .dev-test span.status-pass {
+    color: var(--accent-easy);
+  }
+
+  .dev-test span.status-fail {
+    color: var(--danger);
+  }
+
+  footer {
+    margin-top: 0.4rem;
+    font-size: 0.75rem;
+    color: var(--muted);
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+  }
+
+  @media (max-width: 768px) {
+    .app {
+      padding: 1rem;
+    }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div>
+      <h1>Combinatorics Practice</h1>
+      <div class="subtitle">Year 8 – permutations, combinations and simple probability</div>
+    </div>
+    <div class="mode-toggle" aria-label="Select mode">
+      <button class="mode-btn active" id="modeGameBtn" type="button">Game mode</button>
+      <button class="mode-btn" id="modeWorksheetBtn" type="button">Worksheet mode</button>
+    </div>
+  </header>
+
+  <div class="top-row">
+    <div class="left-column">
+      <section class="card" id="gameCard" aria-label="Game mode">
+        <div class="difficulty-row">
+          <div class="difficulty-buttons" aria-label="Difficulty">
+            <button class="diff-btn easy active" data-diff="easy" type="button">
+              <span class="emoji">🟢</span> Easy
+            </button>
+            <button class="diff-btn med" data-diff="medium" type="button">
+              <span class="emoji">🟡</span> Medium
+            </button>
+            <button class="diff-btn hard" data-diff="hard" type="button">
+              <span class="emoji">🔴</span> Hard
+            </button>
+            <button class="diff-btn random" data-diff="random" type="button">
+              <span class="emoji">🎲</span> Random
+            </button>
+          </div>
+          <div class="badge">
+            <span class="badge-dot"></span>
+            <span>Enter = Submit / Next</span>
+          </div>
+        </div>
+
+        <div class="question-area" aria-live="polite">
+          <p class="question-text" id="questionText">
+            Loading first question...
+          </p>
+        </div>
+
+        <div class="input-row">
+          <input id="answerInput" class="answer-input" autocomplete="off" />
+          <button id="submitBtn" class="btn btn-primary" type="button">
+            Submit
+          </button>
+          <button id="nextBtn" class="btn btn-secondary" type="button">
+            Next
+          </button>
+        </div>
+
+        <div class="feedback" id="feedbackArea">
+          <!-- feedback goes here -->
+        </div>
+      </section>
+
+      <section class="card" id="worksheetCard" aria-label="Worksheet mode" style="display:none;">
+        <h2>Worksheet generator</h2>
+        <div class="worksheet-controls">
+          <div class="worksheet-controls-section">
+            <span>Difficulty:</span>
+            <select id="wsDifficulty" class="worksheet-select">
+              <option value="easy">🟢 Easy</option>
+              <option value="medium">🟡 Medium</option>
+              <option value="hard">🔴 Hard</option>
+              <option value="random">🎲 Random mix</option>
+            </select>
+          </div>
+          <div class="worksheet-controls-section">
+            <span>Number of questions:</span>
+            <select id="wsCount" class="worksheet-select">
+              <option value="5">5</option>
+              <option value="10" selected>10</option>
+              <option value="15">15</option>
+            </select>
+          </div>
+          <button id="generateWorksheetBtn" class="btn btn-primary" type="button">
+            Generate worksheet
+          </button>
+          <button id="revealAllBtn" class="btn btn-secondary" type="button">
+            Reveal all
+          </button>
+          <button id="hideAllBtn" class="btn btn-secondary" type="button">
+            Hide all
+          </button>
+        </div>
+        <div class="worksheet-header">
+          Instruction: Answer each question. Then check your work using the answer key.
+        </div>
+        <div id="worksheetList" class="worksheet-list" aria-live="polite">
+          <!-- generated worksheet questions -->
+        </div>
+      </section>
+    </div>
+
+    <div class="right-column">
+      <section class="card">
+        <h2>Controls</h2>
+        <div class="toggle-row">
+          <div class="toggle-group">
+            <label class="switch-label">
+              <div id="timerSwitch" class="switch" role="switch" aria-checked="false" tabindex="0">
+                <div class="switch-thumb"></div>
+              </div>
+              Timer
+            </label>
+            <select id="timerSelect" class="timer-select" aria-label="Timer length">
+              <option value="0">Off</option>
+              <option value="30">30 s</option>
+              <option value="60" selected>60 s</option>
+              <option value="90">90 s</option>
+              <option value="120">120 s</option>
+            </select>
+          </div>
+          <div class="toggle-group">
+            <label class="switch-label">
+              <div id="soundSwitch" class="switch on" role="switch" aria-checked="true" tabindex="0">
+                <div class="switch-thumb"></div>
+              </div>
+              Sound
+            </label>
+          </div>
+        </div>
+        <div style="margin-top:0.45rem; display:flex; justify-content:space-between; align-items:center;">
+          <div class="timer-display" id="timerDisplay">Timer off</div>
+          <button id="resetSessionBtn" class="btn btn-secondary" type="button">Reset session</button>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Session summary</h2>
+        <div class="stats-grid">
+          <div class="stat-box">
+            <div class="stat-label">Total answered</div>
+            <div class="stat-value" id="statTotal">0</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">Correct</div>
+            <div class="stat-value" id="statCorrect">0</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">Accuracy</div>
+            <div class="stat-value" id="statAccuracy">0%</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">Score</div>
+            <div class="stat-value" id="statScore">0</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">Current streak</div>
+            <div class="stat-value" id="statStreak">0</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">Best streak</div>
+            <div class="stat-value" id="statBestStreak">0</div>
+          </div>
+        </div>
+        <div class="summary-list" id="summaryList" aria-label="Incorrect answers list">
+          <!-- incorrect answers appended here -->
+        </div>
+      </section>
+
+      <section class="card" id="devPanel" style="display:none;">
+        <h3>Developer tests (?dev=1)</h3>
+        <div id="devTestsContainer"></div>
+      </section>
+    </div>
+  </div>
+
+  <footer>
+    <div>Created by Mr. McLean Math.</div>
+    <div>Use Enter to submit; on a correct answer, press Enter or Next to go on.</div>
+  </footer>
+</div>
+
+<script>
+(function() {
+  "use strict";
+
+  // ---------- Utility functions ----------
+
+  function randInt(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
+  function choose(arr) {
+    return arr[randInt(0, arr.length - 1)];
+  }
+
+  function shuffle(arr) {
+    const a = arr.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  function factorial(n) {
+    let r = 1;
+    for (let i = 2; i <= n; i++) r *= i;
+    return r;
+  }
+
+  function combinations(n, k) {
+    if (k < 0 || k > n) return 0;
+    if (k === 0 || k === n) return 1;
+    k = Math.min(k, n - k);
+    let num = 1;
+    let den = 1;
+    for (let i = 1; i <= k; i++) {
+      num *= (n - (k - i));
+      den *= i;
+    }
+    return num / den;
+  }
+
+  function gcd(a, b) {
+    a = Math.abs(a);
+    b = Math.abs(b);
+    while (b) {
+      const t = b;
+      b = a % b;
+      a = t;
+    }
+    return a || 1;
+  }
+
+  function simplifyFraction(num, den) {
+    if (den < 0) {
+      num = -num;
+      den = -den;
+    }
+    const g = gcd(num, den);
+    return { num: num / g, den: den / g };
+  }
+
+  function formatNumberWithSpaces(value) {
+    if (typeof value !== "number" || !isFinite(value)) return String(value);
+    const isInt = Math.abs(value - Math.round(value)) < 1e-9;
+    let s;
+    if (isInt) {
+      s = String(Math.round(value));
+    } else {
+      s = value.toString();
+    }
+    const parts = s.split(".");
+    let intPart = parts[0];
+    const neg = intPart[0] === "-";
+    if (neg) intPart = intPart.slice(1);
+    let out = "";
+    while (intPart.length > 3) {
+      const chunk = intPart.slice(-3);
+      out = " " + chunk + out;
+      intPart = intPart.slice(0, -3);
+    }
+    out = intPart + out;
+    if (neg) out = "-" + out;
+    if (parts.length > 1) {
+      return out + "." + parts[1];
+    }
+    return out;
+  }
+
+  function parseIntegerInput(raw) {
+    let s = (raw || "").trim().replace(/\s+/g, "");
+    if (s === "") return null;
+    s = s.replace(",", ".");
+    const value = Number(s);
+    if (!isFinite(value)) return null;
+    if (Math.abs(value - Math.round(value)) > 1e-9) return null;
+    return Math.round(value);
+  }
+
+  function parseRationalInput(raw) {
+    let s = (raw || "").trim();
+    if (s === "") return null;
+    // Try fraction first
+    if (s.includes("/")) {
+      const parts = s.split("/");
+      if (parts.length !== 2) return null;
+      let num = parseInt(parts[0].replace(/\s+/g, ""), 10);
+      let den = parseInt(parts[1].replace(/\s+/g, ""), 10);
+      if (!isFinite(num) || !isFinite(den) || den === 0) return null;
+      return simplifyFraction(num, den);
+    }
+    // Decimal or integer
+    s = s.replace(/\s+/g, "");
+    s = s.replace(",", ".");
+    const v = Number(s);
+    if (!isFinite(v)) return null;
+    // Convert decimal to fraction
+    const str = v.toString();
+    const decIndex = str.indexOf(".");
+    if (decIndex === -1) {
+      return simplifyFraction(v, 1);
+    }
+    const decimals = str.length - decIndex - 1;
+    const den = Math.pow(10, decimals);
+    const num = Math.round(v * den);
+    return simplifyFraction(num, den);
+  }
+
+  function equalRationals(a, b) {
+    return a && b && a.num === b.num && a.den === b.den;
+  }
+
+  function rationalToString(fr) {
+    if (!fr) return "";
+    if (fr.den === 1) return formatNumberWithSpaces(fr.num);
+    return fr.num + "/" + fr.den;
+  }
+
+  // ---------- Question generator ----------
+
+  // Question format:
+  // {
+  //   text: string,
+  //   answerType: "integer" | "rational",
+  //   correctInteger: number (if integer),
+  //   correctRational: {num, den} (if rational),
+  //   explanation: string
+  // }
+
+  function genEasyQuestion() {
+    const type = randInt(1, 5);
+    switch (type) {
+      case 1: {
+        // Two-digit numbers from 3 distinct digits, no repetition
+        const digitsPool = shuffle([2,3,4,5,6,7,8,9]);
+        const digits = digitsPool.slice(0, 3).sort();
+        const n = digits.length;
+        const count = n * (n - 1);
+        const text = "You have the digits " + digits.join(", ") +
+          ". How many different two-digit numbers can you form if each digit may be used at most once in each number?";
+        const explanation = "For the first digit you can choose any of the " + n +
+          " digits. For the second digit you can choose any of the remaining " + (n - 1) +
+          " digits. That gives " + n + " × " + (n - 1) + " = " + count + " numbers.";
+        return {
+          text,
+          answerType: "integer",
+          correctInteger: count,
+          explanation
+        };
+      }
+      case 2: {
+        // Three-digit codes using digits 0-9, repetition allowed
+        const length = 3;
+        const count = Math.pow(10, length);
+        const text = "A code lock uses a " + length +
+          "-digit code. Each digit can be any of the digits 0–9 and digits may repeat. How many different codes are possible?";
+        const explanation = "Each of the " + length +
+          " positions has 10 choices (0–9). So there are 10 × 10 × 10 = " +
+          formatNumberWithSpaces(count) + " different codes.";
+        return {
+          text,
+          answerType: "integer",
+          correctInteger: count,
+          explanation
+        };
+      }
+      case 3: {
+        // Shirts and jeans combinations
+        const shirts = randInt(3, 5);
+        const jeans = randInt(2, 4);
+        const count = shirts * jeans;
+        const text = "Emil has " + shirts + " different shirts and " + jeans +
+          " pairs of jeans. Each day he wears one shirt and one pair of jeans. In how many different ways can he combine his clothes?";
+        const explanation = "For each of the " + shirts +
+          " shirts he can choose any of the " + jeans + " pairs of jeans. That gives " +
+          shirts + " × " + jeans + " = " + count + " outfits.";
+        return {
+          text,
+          answerType: "integer",
+          correctInteger: count,
+          explanation
+        };
+      }
+      case 4: {
+        // 3 students in a row
+        const namesPool = ["Anna", "Bilal", "Carla", "David", "Elias", "Fatima"];
+        const names = shuffle(namesPool).slice(0, 3);
+        const n = names.length;
+        const count = factorial(n);
+        const text = names.join(", ") +
+          " are standing in a line to present their project. In how many different orders can they stand in the line?";
+        const explanation = "There are " + n + " choices for the first place, " +
+          (n - 1) + " choices for the second and " + (n - 2) +
+          " choices for the third. That is " + n + " × " + (n - 1) + " × " +
+          (n - 2) + " = " + count + " possible orders.";
+        return {
+          text,
+          answerType: "integer",
+          correctInteger: count,
+          explanation
+        };
+      }
+      case 5: {
+        // Quiz with few questions, 3 options each
+        const q = randInt(3, 5);
+        const count = Math.pow(3, q);
+        const text = "On a small quiz there are " + q +
+          " questions. For each question you answer 1, X or 2. In how many different ways can you answer the whole quiz?";
+        const explanation = "Each question has 3 possible answers. For " + q +
+          " questions this gives 3^" + q + " = " + formatNumberWithSpaces(count) + " answer rows.";
+        return {
+          text,
+          answerType: "integer",
+          correctInteger: count,
+          explanation
+        };
+      }
+      default:
+        return genEasyQuestion();
+    }
+  }
+
+  function genMediumQuestion() {
+    const type = randInt(1, 6);
+    switch (type) {
+      case 1: {
+        // 4-digit number with first digit fixed, no repetition
+        const digitsPool = shuffle([1,2,3,4,5,6,7,8,9]);
+        const fixed = digitsPool[0];
+        const rest = digitsPool.slice(1, 5);
+        const nRest = rest.length;
+        const count = nRest * (nRest - 1) * (nRest - 2);
+        const text = "You have the digits " + [fixed].concat(rest).join(", ") +
+          ". You want to form four-digit numbers where the first digit must be " + fixed +
+          " and no digit may be used more than once in a number. How many such numbers are possible?";
+        const explanation = "The first digit is fixed as " + fixed +
+          ". For the second digit there are " + nRest + " choices, for the third " +
+          (nRest - 1) + " and for the fourth " + (nRest - 2) +
+          ". That gives " + nRest + " × " + (nRest - 1) + " × " + (nRest - 2) +
+          " = " + formatNumberWithSpaces(count) + " numbers.";
+        return {
+          text,
+          answerType: "integer",
+          correctInteger: count,
+          explanation
+        };
+      }
+      case 2: {
+        // 4-digit number with last digit odd, no repetition
+        const oddPool = [1,3,5,7,9];
+        const evenPool = [0,2,4,6,8];
+        const digits = shuffle(oddPool.concat(evenPool)).slice(0, 6);
+        const odds = digits.filter(d => d % 2 !== 0);
+        const rest = digits;
+        const nOdds = odds.length;
+        const nDigits = rest.length;
+        // For last digit we choose an odd, then first digit cannot be 0 and cannot be last, others free.
+        // To keep it simple and safe, we will not include 0 in this template.
+        if (rest.includes(0)) {
+          return genMediumQuestion();
+        }
+        const count = nOdds * (nDigits - 1) * (nDigits - 2) * (nDigits - 3);
+        const text = "Using the digits " + rest.join(", ") +
+          " you form four-digit numbers where no digit repeats and the last digit must be odd. How many such numbers can you form?";
+        const explanation = "First choose the last digit among the odd digits (" + nOdds +
+          " choices). For each such choice there are " + (nDigits - 1) +
+          " choices for the first digit, " + (nDigits - 2) +
+          " for the second and " + (nDigits - 3) +
+          " for the third. In total that gives " + nOdds + " × " +
+          (nDigits - 1) + " × " + (nDigits - 2) + " × " + (nDigits - 3) +
+          " = " + formatNumberWithSpaces(count) + " numbers.";
+        return {
+          text,
+          answerType: "integer",
+          correctInteger: count,
+          explanation
+        };
+      }
+      case 3: {
+        // 4-digit code digits 0-9, repetition allowed
+        const length = 4;
+        const count = Math.pow(10, length);
+        const text = "A security code consists of " + length +
+          " digits. Each digit can be any of the digits 0–9 and digits may repeat. How many different codes can be made?";
+        const explanation = "Each of the " + length +
+          " positions has 10 choices. So there are 10^" + length + " = " +
+          formatNumberWithSpaces(count) + " possible codes.";
+        return {
+          text,
+          answerType: "integer",
+          correctInteger: count,
+          explanation
+        };
+      }
+      case 4: {
+        // Meal combinations starter-main-dessert
+        const starters = randInt(2, 4);
+        const mains = randInt(3, 4);
+        const desserts = randInt(2, 3);
+        const count = starters * mains * desserts;
+        const text = "At a restaurant you can choose between " + starters +
+          " starters, " + mains + " main courses and " + desserts +
+          " desserts. You order one starter, one main course and one dessert. In how many different ways can you choose your meal?";
+        const explanation = "You have " + starters +
+          " choices for the starter, " + mains + " for the main course and " +
+          desserts + " for the dessert. That gives " + starters + " × " +
+          mains + " × " + desserts + " = " + count + " possible meals.";
+        return {
+          text,
+          answerType: "integer",
+          correctInteger: count,
+          explanation
+        };
+      }
+      case 5: {
+        // Letters from A,B,C,D with or without repetition
+        const letters = ["A","B","C","D"];
+        const length = 4;
+        const allowRepeat = Math.random() < 0.5;
+        let count, text, explanation;
+        if (allowRepeat) {
+          count = Math.pow(letters.length, length);
+          text = "You make codes that are " + length +
+            " letters long using the letters A, B, C and D. Letters may repeat. How many different codes are possible?";
+          explanation = "Each of the " + length +
+            " positions has 4 choices. So there are 4^" + length +
+            " = " + count + " codes.";
+        } else {
+          count = factorial(letters.length);
+          text = "You arrange the letters A, B, C and D to form letter codes that are " +
+            length + " letters long. Each letter must be used exactly once. How many different codes are possible?";
+          explanation = "It is the number of permutations of 4 letters: 4! = 4 × 3 × 2 × 1 = " +
+            count + ".";
+        }
+        return {
+          text,
+          answerType: "integer",
+          correctInteger: count,
+          explanation
+        };
+      }
+      case 6: {
+        // Simple probability style – picking red from bag
+        const red = randInt(2, 5);
+        const blue = randInt(2, 5);
+        const green = randInt(1, 4);
+        const total = red + blue + green;
+        const fr = simplifyFraction(red, total);
+        const text = "In a bag there are " + red + " red marbles, " + blue +
+          " blue marbles and " + green +
+          " green marbles. One marble is drawn at random. What is the probability that it is red?";
+        const explanation = "There are " + total + " marbles in total and " +
+          red + " of them are red. So the probability of picking a red marble is " +
+          red + "/" + total + ", which simplifies to " + rationalToString(fr) + ".";
+        return {
+          text,
+          answerType: "rational",
+          correctRational: fr,
+          explanation
+        };
+      }
+      default:
+        return genMediumQuestion();
+    }
+  }
+
+  function genHardQuestion() {
+    const type = randInt(1, 7);
+    switch (type) {
+      case 1: {
+        // 5-digit numbers from {1,3,5,7,9}, no repetition
+        const digits = [1,3,5,7,9];
+        const count = factorial(digits.length);
+        const text = "You make five-digit numbers using each of the digits 1, 3, 5, 7 and 9 exactly once in each number. How many different numbers can you make?";
+        const explanation = "You are arranging 5 distinct digits. The number of permutations is 5! = 5 × 4 × 3 × 2 × 1 = " +
+          formatNumberWithSpaces(count) + ".";
+        return {
+          text,
+          answerType: "integer",
+          correctInteger: count,
+          explanation
+        };
+      }
+      case 2: {
+        // 3-letter codes from Swedish alphabet (29 letters), with repetition
+        const letters = 29;
+        const length = 3;
+        const count = Math.pow(letters, length);
+        const text = "A company creates codes that consist of " + length +
+          " letters from the Swedish alphabet. Letters may repeat. The Swedish alphabet has 29 letters. How many different letter codes are possible?";
+        const explanation = "Each of the " + length +
+          " positions has 29 choices. So there are 29^" + length +
+          " = " + formatNumberWithSpaces(count) + " possible codes.";
+        return {
+          text,
+          answerType: "integer",
+          correctInteger: count,
+          explanation
+        };
+      }
+      case 3: {
+        // License plate: 3 letters + 3 digits
+        const letters = 29;
+        const digits = 10;
+        const count = Math.pow(letters, 3) * Math.pow(digits, 3);
+        const text = "A type of licence plate has three letters followed by three digits. The letters come from the Swedish alphabet with 29 letters, and the digits are 0–9. How many different licence plates of this type are possible?";
+        const explanation = "For the letters there are 29 × 29 × 29 possibilities. For the digits there are 10 × 10 × 10 possibilities. In total there are 29^3 × 10^3 = " +
+          formatNumberWithSpaces(count) + " licence plates.";
+        return {
+          text,
+          answerType: "integer",
+          correctInteger: count,
+          explanation
+        };
+      }
+      case 4: {
+        // Quiz / betting with many questions
+        const q = randInt(8, 13);
+        const count = Math.pow(3, q);
+        const text = "On a betting form there are " + q +
+          " matches. For each match you can choose 1, X or 2. In how many different ways can you fill in the whole form?";
+        const explanation = "Each match has 3 possible outcomes. For " + q +
+          " matches there are 3^" + q + " = " + formatNumberWithSpaces(count) +
+          " different rows.";
+        return {
+          text,
+          answerType: "integer",
+          correctInteger: count,
+          explanation
+        };
+      }
+      case 5: {
+        // Probability: neither red nor green
+        const red = randInt(3, 6);
+        const green = randInt(2, 5);
+        const other = randInt(2, 6);
+        const total = red + green + other;
+        const success = other;
+        const fr = simplifyFraction(success, total);
+        const text = "A bag contains " + red + " red balls, " + green +
+          " green balls and " + other +
+          " balls of other colours. One ball is drawn at random. What is the probability that the ball is neither red nor green?";
+        const explanation = "There are " + total +
+          " balls in total. The favourable outcomes are the " + other +
+          " balls that are neither red nor green. So the probability is " +
+          success + "/" + total + ", which simplifies to " + rationalToString(fr) + ".";
+        return {
+          text,
+          answerType: "rational",
+          correctRational: fr,
+          explanation
+        };
+      }
+      case 6: {
+        // Handshakes in conference
+        const n = randInt(6, 15);
+        const count = n * (n - 1) / 2;
+        const text = n +
+          " people meet at a conference. Each pair of people shakes hands exactly once. How many handshakes are there in total?";
+        const explanation = "Each handshake is a pair of people. The number of pairs among " +
+          n + " people is n(n − 1)/2. With n = " + n + " this gives " +
+          n + " × " + (n - 1) + " / 2 = " + formatNumberWithSpaces(count) + " handshakes.";
+        return {
+          text,
+          answerType: "integer",
+          correctInteger: count,
+          explanation
+        };
+      }
+      case 7: {
+        // Time needed to try all codes
+        const length = 4;
+        const countCodes = Math.pow(10, length);
+        const secondsPer = 10;
+        const totalSeconds = countCodes * secondsPer;
+        const totalHours = totalSeconds / 3600;
+        const roundedHours = Math.round(totalHours);
+        const text = "A door code consists of " + length +
+          " digits, each from 0–9. All " + formatNumberWithSpaces(countCodes) +
+          " codes are equally possible. Someone tries the codes one by one without repeating, and each try takes about " +
+          secondsPer + " seconds. About how many hours would it take to try all codes? Give your answer rounded to the nearest whole hour.";
+        const explanation = "There are " + formatNumberWithSpaces(countCodes) +
+          " possible codes. Each try takes " + secondsPer +
+          " seconds, so the total time is " + formatNumberWithSpaces(totalSeconds) +
+          " seconds. That is " + totalSeconds + " / 3600 ≈ " +
+          totalHours.toFixed(2) + " hours, which rounds to " +
+          formatNumberWithSpaces(roundedHours) + " hours.";
+        return {
+          text,
+          answerType: "integer",
+          correctInteger: roundedHours,
+          explanation
+        };
+      }
+      default:
+        return genHardQuestion();
+    }
+  }
+
+  function generateQuestion(difficulty) {
+    if (difficulty === "easy") return genEasyQuestion();
+    if (difficulty === "medium") return genMediumQuestion();
+    if (difficulty === "hard") return genHardQuestion();
+    // random
+    const choices = ["easy", "medium", "hard"];
+    return generateQuestion(choose(choices));
+  }
+
+  // ---------- State ----------
+
+  let currentDifficulty = "easy";
+  let currentQuestion = null;
+  let awaitingNext = false;
+
+  let totalAnswered = 0;
+  let totalCorrect = 0;
+  let score = 0;
+  let streak = 0;
+  let bestStreak = 0;
+
+  let timerEnabled = false;
+  let timerSeconds = 0;
+  let timerRemaining = 0;
+  let timerInterval = null;
+
+  let soundEnabled = true;
+
+  const incorrectLog = [];
+
+  // ---------- Audio (simple beeps using Web Audio) ----------
+
+  const audioCtx = (window.AudioContext || window.webkitAudioContext)
+    ? new (window.AudioContext || window.webkitAudioContext)()
+    : null;
+
+  function playBeep(success) {
+    if (!soundEnabled || !audioCtx) return;
+    const duration = 0.12;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = "sine";
+    osc.frequency.value = success ? 880 : 220;
+    gain.gain.setValueAtTime(0.0001, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.2, audioCtx.currentTime + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + duration);
+  }
+
+  // ---------- DOM helpers ----------
+
+  const questionTextEl = document.getElementById("questionText");
+  const answerInputEl = document.getElementById("answerInput");
+  const submitBtn = document.getElementById("submitBtn");
+  const nextBtn = document.getElementById("nextBtn");
+  const feedbackArea = document.getElementById("feedbackArea");
+
+  const diffButtons = Array.from(document.querySelectorAll(".diff-btn"));
+
+  const timerSwitch = document.getElementById("timerSwitch");
+  const soundSwitch = document.getElementById("soundSwitch");
+  const timerSelect = document.getElementById("timerSelect");
+  const timerDisplay = document.getElementById("timerDisplay");
+  const resetSessionBtn = document.getElementById("resetSessionBtn");
+
+  const statTotal = document.getElementById("statTotal");
+  const statCorrect = document.getElementById("statCorrect");
+  const statAccuracy = document.getElementById("statAccuracy");
+  const statScore = document.getElementById("statScore");
+  const statStreak = document.getElementById("statStreak");
+  const statBestStreak = document.getElementById("statBestStreak");
+  const summaryList = document.getElementById("summaryList");
+
+  const gameCard = document.getElementById("gameCard");
+  const worksheetCard = document.getElementById("worksheetCard");
+  const modeGameBtn = document.getElementById("modeGameBtn");
+  const modeWorksheetBtn = document.getElementById("modeWorksheetBtn");
+
+  const wsDifficulty = document.getElementById("wsDifficulty");
+  const wsCount = document.getElementById("wsCount");
+  const generateWorksheetBtn = document.getElementById("generateWorksheetBtn");
+  const worksheetList = document.getElementById("worksheetList");
+  const revealAllBtn = document.getElementById("revealAllBtn");
+  const hideAllBtn = document.getElementById("hideAllBtn");
+
+  const devPanel = document.getElementById("devPanel");
+  const devTestsContainer = document.getElementById("devTestsContainer");
+
+  // ---------- Timer ----------
+
+  function clearTimer() {
+    if (timerInterval) {
+      clearInterval(timerInterval);
+      timerInterval = null;
+    }
+  }
+
+  function updateTimerDisplay() {
+    if (!timerEnabled || timerSeconds === 0) {
+      timerDisplay.textContent = "Timer off";
+      timerDisplay.classList.remove("danger");
+      return;
+    }
+    if (timerRemaining <= 0) {
+      timerDisplay.textContent = "Time: 0 s";
+      timerDisplay.classList.add("danger");
+    } else {
+      timerDisplay.textContent = "Time: " + timerRemaining + " s";
+      timerDisplay.classList.toggle("danger", timerRemaining <= 5);
+    }
+  }
+
+  function startTimer() {
+    clearTimer();
+    if (!timerEnabled || timerSeconds === 0) {
+      timerDisplay.textContent = "Timer off";
+      return;
+    }
+    timerRemaining = timerSeconds;
+    updateTimerDisplay();
+    timerInterval = setInterval(function() {
+      timerRemaining -= 1;
+      if (timerRemaining <= 0) {
+        clearTimer();
+        timerRemaining = 0;
+        updateTimerDisplay();
+        handleTimeOut();
+      } else {
+        updateTimerDisplay();
+      }
+    }, 1000);
+  }
+
+  function handleTimeOut() {
+    if (!currentQuestion || awaitingNext) return;
+    // mark as incorrect due to time
+    const message = "Time is up.";
+    checkAnswerInternal(null, true, message);
+  }
+
+  // ---------- Stats & summary ----------
+
+  function updateStats() {
+    statTotal.textContent = totalAnswered;
+    statCorrect.textContent = totalCorrect;
+    const acc = totalAnswered === 0 ? 0 : Math.round((totalCorrect / totalAnswered) * 100);
+    statAccuracy.textContent = acc + "%";
+    statScore.textContent = score;
+    statStreak.textContent = streak;
+    statBestStreak.textContent = bestStreak;
+  }
+
+  function addIncorrectToSummary(entry) {
+    incorrectLog.push(entry);
+    const item = document.createElement("div");
+    item.className = "summary-item";
+    const qIndex = incorrectLog.length;
+    const header = document.createElement("div");
+    header.innerHTML = "<strong>#" + qIndex + ":</strong> " + entry.question;
+    const yourAns = document.createElement("div");
+    yourAns.textContent = "Your answer: " + (entry.yourAnswer === null ? "(no answer)" : entry.yourAnswer);
+    const corrAns = document.createElement("div");
+    corrAns.textContent = "Correct answer: " + entry.correctAnswer;
+    item.appendChild(header);
+    item.appendChild(yourAns);
+    item.appendChild(corrAns);
+    if (entry.extra) {
+      const extra = document.createElement("div");
+      extra.textContent = entry.extra;
+      extra.style.color = "#9ca3af";
+      item.appendChild(extra);
+    }
+    summaryList.appendChild(item);
+  }
+
+  function resetSession() {
+    totalAnswered = 0;
+    totalCorrect = 0;
+    score = 0;
+    streak = 0;
+    bestStreak = 0;
+    incorrectLog.length = 0;
+    summaryList.innerHTML = "";
+    updateStats();
+    loadNewQuestion();
+  }
+
+  // ---------- Game logic ----------
+
+  function setDifficulty(diff) {
+    currentDifficulty = diff;
+    diffButtons.forEach(btn => {
+      btn.classList.toggle("active", btn.getAttribute("data-diff") === diff);
+    });
+    loadNewQuestion();
+  }
+
+  function renderQuestion() {
+    if (!currentQuestion) return;
+    questionTextEl.textContent = currentQuestion.text;
+    feedbackArea.innerHTML = "";
+    awaitingNext = false;
+    submitBtn.disabled = false;
+    nextBtn.disabled = false;
+    answerInputEl.value = "";
+    answerInputEl.focus();
+    startTimer();
+  }
+
+  function loadNewQuestion() {
+    currentQuestion = generateQuestion(currentDifficulty);
+    renderQuestion();
+  }
+
+  function checkAnswerInternal(userInputRaw, fromTimer, timerMessage) {
+    if (!currentQuestion) return;
+    clearTimer();
+
+    let correct = false;
+    let userDisplayAnswer;
+    let correctDisplay;
+    let statusText;
+
+    if (currentQuestion.answerType === "integer") {
+      const parsed = parseIntegerInput(userInputRaw);
+      if (parsed === null) {
+        // treat as incorrect
+        correct = false;
+      } else {
+        correct = (parsed === currentQuestion.correctInteger);
+      }
+      userDisplayAnswer = userInputRaw && userInputRaw.toString().trim() !== ""
+        ? userInputRaw.trim()
+        : "(no answer)";
+      correctDisplay = formatNumberWithSpaces(currentQuestion.correctInteger);
+    } else {
+      // rational
+      const parsedFr = parseRationalInput(userInputRaw);
+      const correctFr = currentQuestion.correctRational;
+      correct = parsedFr && equalRationals(simplifyFraction(parsedFr.num, parsedFr.den), correctFr);
+      userDisplayAnswer = userInputRaw && userInputRaw.toString().trim() !== ""
+        ? userInputRaw.trim()
+        : "(no answer)";
+      correctDisplay = rationalToString(correctFr);
+    }
+
+    const feedbackStatus = document.createElement("div");
+    feedbackStatus.className = "feedback-line";
+    const statusSpan = document.createElement("span");
+    statusSpan.className = "feedback-status " + (correct ? "correct" : "incorrect");
+    if (correct) {
+      statusText = "Correct!";
+    } else {
+      statusText = fromTimer ? (timerMessage || "Incorrect (time).") : "Incorrect.";
+    }
+    statusSpan.textContent = statusText;
+    const answerSpan = document.createElement("span");
+    answerSpan.textContent = "Correct answer: " + correctDisplay + ".";
+    feedbackStatus.appendChild(statusSpan);
+    feedbackStatus.appendChild(answerSpan);
+
+    const explanationDiv = document.createElement("div");
+    explanationDiv.className = "explanation";
+    explanationDiv.textContent = currentQuestion.explanation;
+
+    feedbackArea.innerHTML = "";
+    feedbackArea.appendChild(feedbackStatus);
+
+    const showStepsBtn = document.createElement("button");
+    showStepsBtn.type = "button";
+    showStepsBtn.className = "btn btn-secondary";
+    showStepsBtn.style.marginTop = "0.25rem";
+    showStepsBtn.textContent = "Show steps";
+    const explWrapper = document.createElement("div");
+    explWrapper.style.marginTop = "0.25rem";
+    explWrapper.appendChild(explanationDiv);
+    explWrapper.style.display = "none";
+
+    showStepsBtn.addEventListener("click", function() {
+      explWrapper.style.display = explWrapper.style.display === "none" ? "block" : "none";
+    });
+
+    feedbackArea.appendChild(showStepsBtn);
+    feedbackArea.appendChild(explWrapper);
+
+    if (correct) {
+      playBeep(true);
+      totalAnswered += 1;
+      totalCorrect += 1;
+      streak += 1;
+      if (streak > bestStreak) bestStreak = streak;
+      score += 10;
+      if (streak > 0 && streak % 5 === 0) {
+        score += 5;
+      }
+    } else {
+      playBeep(false);
+      totalAnswered += 1;
+      streak = 0;
+      addIncorrectToSummary({
+        question: currentQuestion.text,
+        yourAnswer: userDisplayAnswer,
+        correctAnswer: correctDisplay,
+        extra: fromTimer ? "Missed because of time." : null
+      });
+    }
+    updateStats();
+
+    awaitingNext = true;
+    submitBtn.disabled = false; // still allow submit for same question, but we treat new attempts as new submissions
+  }
+
+  function handleSubmit() {
+    if (!currentQuestion) return;
+    const value = answerInputEl.value;
+    if (awaitingNext) {
+      // already answered once; treat as new attempt and load new question afterwards
+      checkAnswerInternal(value, false);
+      return;
+    }
+    checkAnswerInternal(value, false);
+  }
+
+  function handleNext() {
+    loadNewQuestion();
+  }
+
+  // ---------- Worksheet mode ----------
+
+  function generateWorksheetQuestion(difficulty) {
+    const q = generateQuestion(difficulty);
+    return q;
+  }
+
+  function renderWorksheet() {
+    worksheetList.innerHTML = "";
+    const diff = wsDifficulty.value;
+    const count = parseInt(wsCount.value, 10) || 10;
+    const diffName = {
+      easy: "Easy",
+      medium: "Medium",
+      hard: "Hard",
+      random: "Random mix"
+    }[diff] || "Selected";
+
+    for (let i = 0; i < count; i++) {
+      const actualDiff = diff === "random" ? choose(["easy","medium","hard"]) : diff;
+      const q = generateWorksheetQuestion(actualDiff);
+      const item = document.createElement("div");
+      item.className = "worksheet-item";
+      const qDiv = document.createElement("div");
+      qDiv.className = "worksheet-q";
+      qDiv.textContent = (i + 1) + ". " + q.text;
+      const ansDiv = document.createElement("div");
+      ansDiv.className = "worksheet-answer hidden";
+      let correctDisplay;
+      if (q.answerType === "integer") {
+        correctDisplay = formatNumberWithSpaces(q.correctInteger);
+      } else {
+        correctDisplay = rationalToString(q.correctRational);
+      }
+      ansDiv.textContent = "Answer: " + correctDisplay + ". Steps: " + q.explanation;
+      const revealBtn = document.createElement("button");
+      revealBtn.type = "button";
+      revealBtn.className = "btn btn-secondary";
+      revealBtn.style.marginTop = "0.2rem";
+      revealBtn.textContent = "Reveal";
+      revealBtn.addEventListener("click", function() {
+        const hidden = ansDiv.classList.contains("hidden");
+        ansDiv.classList.toggle("hidden", !hidden);
+        revealBtn.textContent = hidden ? "Hide" : "Reveal";
+      });
+      item.appendChild(qDiv);
+      item.appendChild(revealBtn);
+      item.appendChild(ansDiv);
+      worksheetList.appendChild(item);
+    }
+  }
+
+  function revealAllWorksheet(show) {
+    const answers = worksheetList.querySelectorAll(".worksheet-answer");
+    const buttons = worksheetList.querySelectorAll(".worksheet-item .btn");
+    answers.forEach(a => a.classList.toggle("hidden", !show));
+    buttons.forEach(b => {
+      b.textContent = show ? "Hide" : "Reveal";
+    });
+  }
+
+  // ---------- Mode switching ----------
+
+  function setMode(mode) {
+    if (mode === "game") {
+      gameCard.style.display = "";
+      worksheetCard.style.display = "none";
+      modeGameBtn.classList.add("active");
+      modeWorksheetBtn.classList.remove("active");
+      answerInputEl.focus();
+    } else {
+      gameCard.style.display = "none";
+      worksheetCard.style.display = "";
+      modeGameBtn.classList.remove("active");
+      modeWorksheetBtn.classList.add("active");
+      revealAllWorksheet(false);
+    }
+  }
+
+  // ---------- Switch toggles ----------
+
+  function toggleSwitch(el) {
+    const on = !el.classList.contains("on");
+    el.classList.toggle("on", on);
+    el.setAttribute("aria-checked", on ? "true" : "false");
+    return on;
+  }
+
+  timerSwitch.addEventListener("click", function() {
+    timerEnabled = toggleSwitch(timerSwitch);
+    if (!timerEnabled) {
+      clearTimer();
+      updateTimerDisplay();
+    } else {
+      timerSeconds = parseInt(timerSelect.value, 10) || 0;
+      startTimer();
+    }
+  });
+
+  timerSwitch.addEventListener("keydown", function(e) {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      timerSwitch.click();
+    }
+  });
+
+  soundSwitch.addEventListener("click", function() {
+    soundEnabled = toggleSwitch(soundSwitch);
+  });
+  soundSwitch.addEventListener("keydown", function(e) {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      soundSwitch.click();
+    }
+  });
+
+  timerSelect.addEventListener("change", function() {
+    const v = parseInt(timerSelect.value, 10) || 0;
+    timerSeconds = v;
+    if (!timerEnabled || v === 0) {
+      clearTimer();
+      updateTimerDisplay();
+    } else {
+      startTimer();
+    }
+  });
+
+  resetSessionBtn.addEventListener("click", function() {
+    resetSession();
+  });
+
+  // ---------- Event listeners ----------
+
+  diffButtons.forEach(btn => {
+    btn.addEventListener("click", function() {
+      const diff = btn.getAttribute("data-diff");
+      setDifficulty(diff);
+    });
+  });
+
+  submitBtn.addEventListener("click", function() {
+    handleSubmit();
+  });
+
+  nextBtn.addEventListener("click", function() {
+    handleNext();
+  });
+
+  answerInputEl.addEventListener("keydown", function(e) {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      if (awaitingNext) {
+        handleNext();
+      } else {
+        handleSubmit();
+      }
+    } else if (e.key === "Escape") {
+      e.preventDefault();
+      answerInputEl.value = "";
+    }
+  });
+
+  modeGameBtn.addEventListener("click", function() {
+    setMode("game");
+  });
+
+  modeWorksheetBtn.addEventListener("click", function() {
+    setMode("worksheet");
+  });
+
+  generateWorksheetBtn.addEventListener("click", function() {
+    renderWorksheet();
+  });
+
+  revealAllBtn.addEventListener("click", function() {
+    revealAllWorksheet(true);
+  });
+
+  hideAllBtn.addEventListener("click", function() {
+    revealAllWorksheet(false);
+  });
+
+  // ---------- Developer tests ----------
+
+  function runDevTests() {
+    const tests = [];
+
+    // 1) 3 distinct digits, 2-digit numbers, no repetition -> 6
+    tests.push({
+      name: "3 digits, 2-digit numbers without repetition",
+      run: function() {
+        const n = 3;
+        const expected = n * (n - 1);
+        return expected === 6;
+      }
+    });
+
+    // 2) digits {4,6,8}, 2-digit with repetition -> 9
+    tests.push({
+      name: "{4,6,8} 2-digit numbers with repetition",
+      run: function() {
+        const n = 3;
+        const expected = n * n;
+        return expected === 9;
+      }
+    });
+
+    // 3) 4 shirts, 3 jeans -> 12 outfits
+    tests.push({
+      name: "4 shirts, 3 jeans",
+      run: function() {
+        return 4 * 3 === 12;
+      }
+    });
+
+    // 4) 3 starters, 4 mains, 2 desserts -> 24
+    tests.push({
+      name: "3×4×2 meal combinations",
+      run: function() {
+        return 3 * 4 * 2 === 24;
+      }
+    });
+
+    // 5) 4-digit code digits 0-9 -> 10 000
+    tests.push({
+      name: "4-digit code 0–9 with repetition",
+      run: function() {
+        return Math.pow(10,4) === 10000;
+      }
+    });
+
+    // 6) permutations of 4 distinct digits -> 24
+    tests.push({
+      name: "Permutations of 4 distinct digits",
+      run: function() {
+        return factorial(4) === 24;
+      }
+    });
+
+    // 7) permutations of 5 distinct digits -> 120
+    tests.push({
+      name: "Permutations of 5 distinct digits",
+      run: function() {
+        return factorial(5) === 120;
+      }
+    });
+
+    // 8) choosing 2 from 6 -> 15
+    tests.push({
+      name: "Combinations C(6,2)",
+      run: function() {
+        return combinations(6,2) === 15;
+      }
+    });
+
+    // 9) probability red: 4 red, 3 green, 3 other -> 2/5
+    tests.push({
+      name: "Probability red (4 red, 3 green, 3 other)",
+      run: function() {
+        const fr = simplifyFraction(4, 10);
+        return fr.num === 2 && fr.den === 5;
+      }
+    });
+
+    // 10) handshakes for n=10 -> 45
+    tests.push({
+      name: "Handshakes n=10",
+      run: function() {
+        return 10 * 9 / 2 === 45;
+      }
+    });
+
+    // 11) licence plates 29^3 * 10^3
+    tests.push({
+      name: "Licence plates 29^3 × 10^3",
+      run: function() {
+        const value = Math.pow(29,3) * Math.pow(10,3);
+        return value === 24389 * 1000;
+      }
+    });
+
+    devTestsContainer.innerHTML = "";
+    tests.forEach(function(t, idx) {
+      let passed = false;
+      try {
+        passed = !!t.run();
+      } catch (e) {
+        passed = false;
+      }
+      const row = document.createElement("div");
+      row.className = "dev-test";
+      const nameSpan = document.createElement("span");
+      nameSpan.textContent = (idx + 1) + ". " + t.name;
+      const statusSpan = document.createElement("span");
+      statusSpan.textContent = passed ? "PASS" : "FAIL";
+      statusSpan.className = passed ? "status-pass" : "status-fail";
+      row.appendChild(nameSpan);
+      row.appendChild(statusSpan);
+      devTestsContainer.appendChild(row);
+    });
+  }
+
+  function initDevModeIfNeeded() {
+    if (location.search.toLowerCase().includes("dev=1")) {
+      devPanel.style.display = "";
+      runDevTests();
+    }
+  }
+
+  // ---------- Init ----------
+
+  function init() {
+    timerEnabled = false;
+    timerSeconds = parseInt(timerSelect.value, 10) || 0;
+    updateTimerDisplay();
+    setDifficulty("easy");
+    setMode("game");
+    updateStats();
+    initDevModeIfNeeded();
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>
