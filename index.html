@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<title>Combinatorics Practice – Created by Mr. McLean Math</title>
+<title>Combinatorics Practice - Created by Mr. McLean Math</title>
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <style>
   :root {
@@ -117,11 +117,6 @@
   .mode-btn.active {
     background: var(--accent-soft);
     color: var(--text);
-  }
-
-  .mode-btn:first-child::before,
-  .mode-btn:last-child::before {
-    content: "";
   }
 
   .difficulty-row, .controls-row {
@@ -487,7 +482,7 @@
   <header>
     <div>
       <h1>Combinatorics Practice</h1>
-      <div class="subtitle">Year 8 – permutations, combinations and simple probability</div>
+      <div class="subtitle">Year 8 - permutations, combinations and simple probability</div>
     </div>
     <div class="mode-toggle" aria-label="Select mode">
       <button class="mode-btn active" id="modeGameBtn" type="button">Game mode</button>
@@ -535,9 +530,7 @@
           </button>
         </div>
 
-        <div class="feedback" id="feedbackArea">
-          <!-- feedback goes here -->
-        </div>
+        <div class="feedback" id="feedbackArea"></div>
       </section>
 
       <section class="card" id="worksheetCard" aria-label="Worksheet mode" style="display:none;">
@@ -573,9 +566,7 @@
         <div class="worksheet-header">
           Instruction: Answer each question. Then check your work using the answer key.
         </div>
-        <div id="worksheetList" class="worksheet-list" aria-live="polite">
-          <!-- generated worksheet questions -->
-        </div>
+        <div id="worksheetList" class="worksheet-list" aria-live="polite"></div>
       </section>
     </div>
 
@@ -641,9 +632,7 @@
             <div class="stat-value" id="statBestStreak">0</div>
           </div>
         </div>
-        <div class="summary-list" id="summaryList" aria-label="Incorrect answers list">
-          <!-- incorrect answers appended here -->
-        </div>
+        <div class="summary-list" id="summaryList" aria-label="Incorrect answers list"></div>
       </section>
 
       <section class="card" id="devPanel" style="display:none;">
@@ -677,7 +666,9 @@
     const a = arr.slice();
     for (let i = a.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
-      [a[i], a[j]] = [a[j], a[i]];
+      const tmp = a[i];
+      a[i] = a[j];
+      a[j] = tmp;
     }
     return a;
   }
@@ -742,9 +733,7 @@
     }
     out = intPart + out;
     if (neg) out = "-" + out;
-    if (parts.length > 1) {
-      return out + "." + parts[1];
-    }
+    if (parts.length > 1) return out + "." + parts[1];
     return out;
   }
 
@@ -761,7 +750,7 @@
   function parseRationalInput(raw) {
     let s = (raw || "").trim();
     if (s === "") return null;
-    // Try fraction first
+
     if (s.includes("/")) {
       const parts = s.split("/");
       if (parts.length !== 2) return null;
@@ -770,17 +759,16 @@
       if (!isFinite(num) || !isFinite(den) || den === 0) return null;
       return simplifyFraction(num, den);
     }
-    // Decimal or integer
+
     s = s.replace(/\s+/g, "");
     s = s.replace(",", ".");
     const v = Number(s);
     if (!isFinite(v)) return null;
-    // Convert decimal to fraction
+
     const str = v.toString();
     const decIndex = str.indexOf(".");
-    if (decIndex === -1) {
-      return simplifyFraction(v, 1);
-    }
+    if (decIndex === -1) return simplifyFraction(v, 1);
+
     const decimals = str.length - decIndex - 1;
     const den = Math.pow(10, decimals);
     const num = Math.round(v * den);
@@ -797,8 +785,45 @@
     return fr.num + "/" + fr.den;
   }
 
-  // ---------- Question generator ----------
+  // ---------- Anti-repeat system ----------
+  // Keeps recent question "keys" so the game doesn't feel repetitive.
+  const RECENT_LIMIT = 18;
+  const recentKeys = [];
 
+  function makeKey(q) {
+    // Key based on question text + answer type + answer value
+    let ans = "";
+    if (q.answerType === "integer") ans = "i:" + String(q.correctInteger);
+    else ans = "r:" + q.correctRational.num + "/" + q.correctRational.den;
+    return q.text + "||" + q.answerType + "||" + ans;
+  }
+
+  function rememberKey(key) {
+    recentKeys.push(key);
+    while (recentKeys.length > RECENT_LIMIT) recentKeys.shift();
+  }
+
+  function isRecent(key) {
+    return recentKeys.indexOf(key) !== -1;
+  }
+
+  function generateNonRepeating(difficulty) {
+    // Try a bunch of times to avoid repeats
+    for (let tries = 0; tries < 50; tries++) {
+      const q = generateQuestionRaw(difficulty);
+      const k = makeKey(q);
+      if (!isRecent(k)) {
+        rememberKey(k);
+        return q;
+      }
+    }
+    // If we somehow can't find a non-repeat, just take one
+    const fallback = generateQuestionRaw(difficulty);
+    rememberKey(makeKey(fallback));
+    return fallback;
+  }
+
+  // ---------- Question generator ----------
   // Question format:
   // {
   //   text: string,
@@ -809,92 +834,103 @@
   // }
 
   function genEasyQuestion() {
-    const type = randInt(1, 5);
+    const type = randInt(1, 10);
     switch (type) {
       case 1: {
-        // Two-digit numbers from 3 distinct digits, no repetition
+        // Existing: Two-digit numbers from 3 distinct digits, no repetition
         const digitsPool = shuffle([2,3,4,5,6,7,8,9]);
         const digits = digitsPool.slice(0, 3).sort();
         const n = digits.length;
         const count = n * (n - 1);
         const text = "You have the digits " + digits.join(", ") +
           ". How many different two-digit numbers can you form if each digit may be used at most once in each number?";
-        const explanation = "For the first digit you can choose any of the " + n +
-          " digits. For the second digit you can choose any of the remaining " + (n - 1) +
-          " digits. That gives " + n + " × " + (n - 1) + " = " + count + " numbers.";
-        return {
-          text,
-          answerType: "integer",
-          correctInteger: count,
-          explanation
-        };
+        const explanation = "First digit: " + n + " choices. Second digit: " + (n - 1) +
+          " choices. Total: " + n + " x " + (n - 1) + " = " + count + ".";
+        return { text, answerType: "integer", correctInteger: count, explanation };
       }
       case 2: {
-        // Three-digit codes using digits 0-9, repetition allowed
+        // Existing: 3-digit code 0-9 repetition allowed
         const length = 3;
         const count = Math.pow(10, length);
         const text = "A code lock uses a " + length +
-          "-digit code. Each digit can be any of the digits 0–9 and digits may repeat. How many different codes are possible?";
-        const explanation = "Each of the " + length +
-          " positions has 10 choices (0–9). So there are 10 × 10 × 10 = " +
-          formatNumberWithSpaces(count) + " different codes.";
-        return {
-          text,
-          answerType: "integer",
-          correctInteger: count,
-          explanation
-        };
+          "-digit code. Each digit can be any of the digits 0-9 and digits may repeat. How many different codes are possible?";
+        const explanation = "Each position has 10 choices. Total: 10^" + length + " = " + formatNumberWithSpaces(count) + ".";
+        return { text, answerType: "integer", correctInteger: count, explanation };
       }
       case 3: {
-        // Shirts and jeans combinations
-        const shirts = randInt(3, 5);
-        const jeans = randInt(2, 4);
+        // Existing: shirts and jeans
+        const shirts = randInt(3, 6);
+        const jeans = randInt(2, 5);
         const count = shirts * jeans;
         const text = "Emil has " + shirts + " different shirts and " + jeans +
           " pairs of jeans. Each day he wears one shirt and one pair of jeans. In how many different ways can he combine his clothes?";
-        const explanation = "For each of the " + shirts +
-          " shirts he can choose any of the " + jeans + " pairs of jeans. That gives " +
-          shirts + " × " + jeans + " = " + count + " outfits.";
-        return {
-          text,
-          answerType: "integer",
-          correctInteger: count,
-          explanation
-        };
+        const explanation = shirts + " choices for shirts and " + jeans + " choices for jeans. Total: " + shirts + " x " + jeans + " = " + count + ".";
+        return { text, answerType: "integer", correctInteger: count, explanation };
       }
       case 4: {
-        // 3 students in a row
-        const namesPool = ["Anna", "Bilal", "Carla", "David", "Elias", "Fatima"];
+        // Existing: 3 students line
+        const namesPool = ["Anna", "Bilal", "Carla", "David", "Elias", "Fatima", "Hugo", "Iman"];
         const names = shuffle(namesPool).slice(0, 3);
         const n = names.length;
         const count = factorial(n);
         const text = names.join(", ") +
           " are standing in a line to present their project. In how many different orders can they stand in the line?";
-        const explanation = "There are " + n + " choices for the first place, " +
-          (n - 1) + " choices for the second and " + (n - 2) +
-          " choices for the third. That is " + n + " × " + (n - 1) + " × " +
-          (n - 2) + " = " + count + " possible orders.";
-        return {
-          text,
-          answerType: "integer",
-          correctInteger: count,
-          explanation
-        };
+        const explanation = "3 positions: 3 x 2 x 1 = 6.";
+        return { text, answerType: "integer", correctInteger: count, explanation };
       }
       case 5: {
-        // Quiz with few questions, 3 options each
-        const q = randInt(3, 5);
+        // Existing: quiz 1/X/2
+        const q = randInt(3, 6);
         const count = Math.pow(3, q);
         const text = "On a small quiz there are " + q +
           " questions. For each question you answer 1, X or 2. In how many different ways can you answer the whole quiz?";
-        const explanation = "Each question has 3 possible answers. For " + q +
-          " questions this gives 3^" + q + " = " + formatNumberWithSpaces(count) + " answer rows.";
-        return {
-          text,
-          answerType: "integer",
-          correctInteger: count,
-          explanation
-        };
+        const explanation = "Each question has 3 choices. Total: 3^" + q + " = " + formatNumberWithSpaces(count) + ".";
+        return { text, answerType: "integer", correctInteger: count, explanation };
+      }
+      case 6: {
+        // NEW: Ice cream flavours + toppings
+        const flavours = randInt(3, 6);
+        const toppings = randInt(2, 5);
+        const count = flavours * toppings;
+        const text = "At an ice cream shop you choose 1 flavour out of " + flavours +
+          " and 1 topping out of " + toppings + ". How many different ice creams can you make?";
+        const explanation = flavours + " x " + toppings + " = " + count + ".";
+        return { text, answerType: "integer", correctInteger: count, explanation };
+      }
+      case 7: {
+        // NEW: PIN of length 2-4, digits 0-9 repetition allowed
+        const length = randInt(2, 4);
+        const count = Math.pow(10, length);
+        const text = "A PIN code has " + length + " digits. Digits can be 0-9 and may repeat. How many PIN codes are possible?";
+        const explanation = "10 choices per digit. Total: 10^" + length + " = " + formatNumberWithSpaces(count) + ".";
+        return { text, answerType: "integer", correctInteger: count, explanation };
+      }
+      case 8: {
+        // NEW: Arrange 4 students (simple permutation)
+        const namesPool = ["Omar", "Sara", "Lina", "Noah", "Maja", "Alex", "Yusuf", "Lea"];
+        const k = 4;
+        const names = shuffle(namesPool).slice(0, k);
+        const count = factorial(k);
+        const text = names.join(", ") + " are standing in a line. How many different orders can they stand in?";
+        const explanation = "Permutations of 4 distinct people: 4! = 24.";
+        return { text, answerType: "integer", correctInteger: count, explanation };
+      }
+      case 9: {
+        // NEW: Choose 1 drink and 1 snack (rule of product)
+        const drinks = randInt(3, 6);
+        const snacks = randInt(3, 6);
+        const count = drinks * snacks;
+        const text = "In a cafe there are " + drinks + " drinks and " + snacks + " snacks. You choose one drink and one snack. How many choices are there?";
+        const explanation = drinks + " x " + snacks + " = " + count + ".";
+        return { text, answerType: "integer", correctInteger: count, explanation };
+      }
+      case 10: {
+        // NEW: Two-letter code from 6 letters, repetition allowed
+        const letters = ["A","B","C","D","E","F"];
+        const count = letters.length * letters.length;
+        const text = "You make a two-letter code using the letters A, B, C, D, E, F. Letters may repeat. How many codes are possible?";
+        const explanation = "6 choices for the first letter and 6 for the second: 6 x 6 = 36.";
+        return { text, answerType: "integer", correctInteger: count, explanation };
       }
       default:
         return genEasyQuestion();
@@ -902,99 +938,58 @@
   }
 
   function genMediumQuestion() {
-    const type = randInt(1, 6);
+    const type = randInt(1, 14);
     switch (type) {
       case 1: {
-        // 4-digit number with first digit fixed, no repetition
+        // Existing: 4-digit number with first digit fixed, no repetition
         const digitsPool = shuffle([1,2,3,4,5,6,7,8,9]);
         const fixed = digitsPool[0];
-        const rest = digitsPool.slice(1, 5);
+        const rest = digitsPool.slice(1, 6);
         const nRest = rest.length;
         const count = nRest * (nRest - 1) * (nRest - 2);
         const text = "You have the digits " + [fixed].concat(rest).join(", ") +
           ". You want to form four-digit numbers where the first digit must be " + fixed +
           " and no digit may be used more than once in a number. How many such numbers are possible?";
-        const explanation = "The first digit is fixed as " + fixed +
-          ". For the second digit there are " + nRest + " choices, for the third " +
-          (nRest - 1) + " and for the fourth " + (nRest - 2) +
-          ". That gives " + nRest + " × " + (nRest - 1) + " × " + (nRest - 2) +
-          " = " + formatNumberWithSpaces(count) + " numbers.";
-        return {
-          text,
-          answerType: "integer",
-          correctInteger: count,
-          explanation
-        };
+        const explanation = "First digit fixed. Then: " + nRest + " x " + (nRest - 1) + " x " + (nRest - 2) + " = " + formatNumberWithSpaces(count) + ".";
+        return { text, answerType: "integer", correctInteger: count, explanation };
       }
       case 2: {
-        // 4-digit number with last digit odd, no repetition
-        const oddPool = [1,3,5,7,9];
-        const evenPool = [0,2,4,6,8];
-        const digits = shuffle(oddPool.concat(evenPool)).slice(0, 6);
+        // Existing: last digit odd, no repetition (avoid 0)
+        const digits = shuffle([1,2,3,4,5,6,7,8,9]).slice(0, 6);
         const odds = digits.filter(d => d % 2 !== 0);
-        const rest = digits;
         const nOdds = odds.length;
-        const nDigits = rest.length;
-        // For last digit we choose an odd, then first digit cannot be 0 and cannot be last, others free.
-        // To keep it simple and safe, we will not include 0 in this template.
-        if (rest.includes(0)) {
-          return genMediumQuestion();
-        }
+        const nDigits = digits.length;
         const count = nOdds * (nDigits - 1) * (nDigits - 2) * (nDigits - 3);
-        const text = "Using the digits " + rest.join(", ") +
+        const text = "Using the digits " + digits.join(", ") +
           " you form four-digit numbers where no digit repeats and the last digit must be odd. How many such numbers can you form?";
-        const explanation = "First choose the last digit among the odd digits (" + nOdds +
-          " choices). For each such choice there are " + (nDigits - 1) +
-          " choices for the first digit, " + (nDigits - 2) +
-          " for the second and " + (nDigits - 3) +
-          " for the third. In total that gives " + nOdds + " × " +
-          (nDigits - 1) + " × " + (nDigits - 2) + " × " + (nDigits - 3) +
-          " = " + formatNumberWithSpaces(count) + " numbers.";
-        return {
-          text,
-          answerType: "integer",
-          correctInteger: count,
-          explanation
-        };
+        const explanation = "Choose odd last digit (" + nOdds + "). Then remaining slots: " +
+          (nDigits - 1) + " x " + (nDigits - 2) + " x " + (nDigits - 3) +
+          ". Total: " + formatNumberWithSpaces(count) + ".";
+        return { text, answerType: "integer", correctInteger: count, explanation };
       }
       case 3: {
-        // 4-digit code digits 0-9, repetition allowed
+        // Existing: 4-digit code repetition allowed
         const length = 4;
         const count = Math.pow(10, length);
         const text = "A security code consists of " + length +
-          " digits. Each digit can be any of the digits 0–9 and digits may repeat. How many different codes can be made?";
-        const explanation = "Each of the " + length +
-          " positions has 10 choices. So there are 10^" + length + " = " +
-          formatNumberWithSpaces(count) + " possible codes.";
-        return {
-          text,
-          answerType: "integer",
-          correctInteger: count,
-          explanation
-        };
+          " digits. Each digit can be any of the digits 0-9 and digits may repeat. How many different codes can be made?";
+        const explanation = "10^" + length + " = " + formatNumberWithSpaces(count) + ".";
+        return { text, answerType: "integer", correctInteger: count, explanation };
       }
       case 4: {
-        // Meal combinations starter-main-dessert
-        const starters = randInt(2, 4);
-        const mains = randInt(3, 4);
-        const desserts = randInt(2, 3);
+        // Existing: starter-main-dessert
+        const starters = randInt(2, 5);
+        const mains = randInt(3, 6);
+        const desserts = randInt(2, 4);
         const count = starters * mains * desserts;
         const text = "At a restaurant you can choose between " + starters +
           " starters, " + mains + " main courses and " + desserts +
           " desserts. You order one starter, one main course and one dessert. In how many different ways can you choose your meal?";
-        const explanation = "You have " + starters +
-          " choices for the starter, " + mains + " for the main course and " +
-          desserts + " for the dessert. That gives " + starters + " × " +
-          mains + " × " + desserts + " = " + count + " possible meals.";
-        return {
-          text,
-          answerType: "integer",
-          correctInteger: count,
-          explanation
-        };
+        const explanation = starters + " x " + mains + " x " + desserts + " = " + count + ".";
+        return { text, answerType: "integer", correctInteger: count, explanation };
       }
       case 5: {
-        // Letters from A,B,C,D with or without repetition
+        // Existing: A,B,C,D with/without repetition
         const letters = ["A","B","C","D"];
         const length = 4;
         const allowRepeat = Math.random() < 0.5;
@@ -1003,42 +998,106 @@
           count = Math.pow(letters.length, length);
           text = "You make codes that are " + length +
             " letters long using the letters A, B, C and D. Letters may repeat. How many different codes are possible?";
-          explanation = "Each of the " + length +
-            " positions has 4 choices. So there are 4^" + length +
-            " = " + count + " codes.";
+          explanation = "4^" + length + " = " + count + ".";
         } else {
           count = factorial(letters.length);
           text = "You arrange the letters A, B, C and D to form letter codes that are " +
             length + " letters long. Each letter must be used exactly once. How many different codes are possible?";
-          explanation = "It is the number of permutations of 4 letters: 4! = 4 × 3 × 2 × 1 = " +
-            count + ".";
+          explanation = "4! = " + count + ".";
         }
-        return {
-          text,
-          answerType: "integer",
-          correctInteger: count,
-          explanation
-        };
+        return { text, answerType: "integer", correctInteger: count, explanation };
       }
       case 6: {
-        // Simple probability style – picking red from bag
-        const red = randInt(2, 5);
-        const blue = randInt(2, 5);
-        const green = randInt(1, 4);
+        // Existing: probability red
+        const red = randInt(2, 6);
+        const blue = randInt(2, 6);
+        const green = randInt(1, 5);
         const total = red + blue + green;
         const fr = simplifyFraction(red, total);
         const text = "In a bag there are " + red + " red marbles, " + blue +
           " blue marbles and " + green +
           " green marbles. One marble is drawn at random. What is the probability that it is red?";
-        const explanation = "There are " + total + " marbles in total and " +
-          red + " of them are red. So the probability of picking a red marble is " +
-          red + "/" + total + ", which simplifies to " + rationalToString(fr) + ".";
-        return {
-          text,
-          answerType: "rational",
-          correctRational: fr,
-          explanation
-        };
+        const explanation = "Probability = red/total = " + red + "/" + total + " = " + rationalToString(fr) + ".";
+        return { text, answerType: "rational", correctRational: fr, explanation };
+      }
+
+      // NEW medium variety below:
+
+      case 7: {
+        // Choose 2 toppings from n (combinations)
+        const n = randInt(6, 10);
+        const k = 2;
+        const count = combinations(n, k);
+        const text = "A pizza place has " + n + " different toppings. You choose exactly " + k + " different toppings. How many different topping combinations are possible?";
+        const explanation = "Order does not matter: C(" + n + "," + k + ") = " + formatNumberWithSpaces(count) + ".";
+        return { text, answerType: "integer", correctInteger: count, explanation };
+      }
+      case 8: {
+        // Choose 3 from n
+        const n = randInt(7, 12);
+        const k = 3;
+        const count = combinations(n, k);
+        const text = "A class has " + n + " students. A team of " + k + " students must be chosen. How many different teams are possible?";
+        const explanation = "Order does not matter: C(" + n + "," + k + ") = " + formatNumberWithSpaces(count) + ".";
+        return { text, answerType: "integer", correctInteger: count, explanation };
+      }
+      case 9: {
+        // Permutations: arrange k out of n
+        const n = randInt(6, 9);
+        const k = randInt(3, 5);
+        let count = 1;
+        for (let i = 0; i < k; i++) count *= (n - i);
+        const text = "There are " + n + " books. You choose " + k + " different books and place them on a shelf in a row. How many different ordered arrangements are possible?";
+        const explanation = "Order matters: " + n + "P" + k + " = " + n + " x " + (n-1) + " x ... (" + k + " factors) = " + formatNumberWithSpaces(count) + ".";
+        return { text, answerType: "integer", correctInteger: count, explanation };
+      }
+      case 10: {
+        // Probability NOT red
+        const red = randInt(2, 7);
+        const blue = randInt(2, 7);
+        const green = randInt(1, 6);
+        const total = red + blue + green;
+        const nonRed = total - red;
+        const fr = simplifyFraction(nonRed, total);
+        const text = "In a bag there are " + red + " red balls, " + blue + " blue balls and " + green + " green balls. One ball is drawn at random. What is the probability that it is NOT red?";
+        const explanation = "Not red means blue or green: (" + blue + " + " + green + ")/" + total + " = " + nonRed + "/" + total + " = " + rationalToString(fr) + ".";
+        return { text, answerType: "rational", correctRational: fr, explanation };
+      }
+      case 11: {
+        // Two-stage outfit with shoes too
+        const shirts = randInt(3, 6);
+        const pants = randInt(2, 5);
+        const shoes = randInt(2, 4);
+        const count = shirts * pants * shoes;
+        const text = "Emil has " + shirts + " shirts, " + pants + " pairs of pants and " + shoes + " pairs of shoes. He chooses 1 of each. How many outfits are possible?";
+        const explanation = shirts + " x " + pants + " x " + shoes + " = " + count + ".";
+        return { text, answerType: "integer", correctInteger: count, explanation };
+      }
+      case 12: {
+        // 5-digit code, digits 0-9, repetition allowed
+        const length = 5;
+        const count = Math.pow(10, length);
+        const text = "A code consists of " + length + " digits (0-9). Digits may repeat. How many codes are possible?";
+        const explanation = "10^" + length + " = " + formatNumberWithSpaces(count) + ".";
+        return { text, answerType: "integer", correctInteger: count, explanation };
+      }
+      case 13: {
+        // Password letters only: 26 letters, length 4
+        const letters = 26;
+        const length = 4;
+        const count = Math.pow(letters, length);
+        const text = "A password uses only lowercase English letters (26 letters). The password length is " + length + " and letters may repeat. How many passwords are possible?";
+        const explanation = "26^" + length + " = " + formatNumberWithSpaces(count) + ".";
+        return { text, answerType: "integer", correctInteger: count, explanation };
+      }
+      case 14: {
+        // Combinations with a story: choose 2 desserts from n
+        const n = randInt(5, 9);
+        const k = 2;
+        const count = combinations(n, k);
+        const text = "A bakery has " + n + " different desserts. You choose " + k + " different desserts to share. How many different choices are possible?";
+        const explanation = "Order does not matter: C(" + n + "," + k + ") = " + formatNumberWithSpaces(count) + ".";
+        return { text, answerType: "integer", correctInteger: count, explanation };
       }
       default:
         return genMediumQuestion();
@@ -1046,110 +1105,67 @@
   }
 
   function genHardQuestion() {
-    const type = randInt(1, 7);
+    const type = randInt(1, 14);
     switch (type) {
       case 1: {
-        // 5-digit numbers from {1,3,5,7,9}, no repetition
+        // Existing: permutations of 1,3,5,7,9
         const digits = [1,3,5,7,9];
         const count = factorial(digits.length);
         const text = "You make five-digit numbers using each of the digits 1, 3, 5, 7 and 9 exactly once in each number. How many different numbers can you make?";
-        const explanation = "You are arranging 5 distinct digits. The number of permutations is 5! = 5 × 4 × 3 × 2 × 1 = " +
-          formatNumberWithSpaces(count) + ".";
-        return {
-          text,
-          answerType: "integer",
-          correctInteger: count,
-          explanation
-        };
+        const explanation = "5 distinct digits arranged: 5! = 120.";
+        return { text, answerType: "integer", correctInteger: count, explanation };
       }
       case 2: {
-        // 3-letter codes from Swedish alphabet (29 letters), with repetition
+        // Existing: 3 letters from Swedish alphabet (29), repetition allowed
         const letters = 29;
         const length = 3;
         const count = Math.pow(letters, length);
         const text = "A company creates codes that consist of " + length +
           " letters from the Swedish alphabet. Letters may repeat. The Swedish alphabet has 29 letters. How many different letter codes are possible?";
-        const explanation = "Each of the " + length +
-          " positions has 29 choices. So there are 29^" + length +
-          " = " + formatNumberWithSpaces(count) + " possible codes.";
-        return {
-          text,
-          answerType: "integer",
-          correctInteger: count,
-          explanation
-        };
+        const explanation = "29^" + length + " = " + formatNumberWithSpaces(count) + ".";
+        return { text, answerType: "integer", correctInteger: count, explanation };
       }
       case 3: {
-        // License plate: 3 letters + 3 digits
+        // Existing: license plates 3 letters + 3 digits
         const letters = 29;
         const digits = 10;
         const count = Math.pow(letters, 3) * Math.pow(digits, 3);
-        const text = "A type of licence plate has three letters followed by three digits. The letters come from the Swedish alphabet with 29 letters, and the digits are 0–9. How many different licence plates of this type are possible?";
-        const explanation = "For the letters there are 29 × 29 × 29 possibilities. For the digits there are 10 × 10 × 10 possibilities. In total there are 29^3 × 10^3 = " +
-          formatNumberWithSpaces(count) + " licence plates.";
-        return {
-          text,
-          answerType: "integer",
-          correctInteger: count,
-          explanation
-        };
+        const text = "A type of licence plate has three letters followed by three digits. The letters come from the Swedish alphabet with 29 letters, and the digits are 0-9. How many different licence plates of this type are possible?";
+        const explanation = "29^3 choices for letters and 10^3 for digits. Total: 29^3 x 10^3 = " + formatNumberWithSpaces(count) + ".";
+        return { text, answerType: "integer", correctInteger: count, explanation };
       }
       case 4: {
-        // Quiz / betting with many questions
-        const q = randInt(8, 13);
+        // Existing: betting form 1/X/2
+        const q = randInt(8, 14);
         const count = Math.pow(3, q);
         const text = "On a betting form there are " + q +
           " matches. For each match you can choose 1, X or 2. In how many different ways can you fill in the whole form?";
-        const explanation = "Each match has 3 possible outcomes. For " + q +
-          " matches there are 3^" + q + " = " + formatNumberWithSpaces(count) +
-          " different rows.";
-        return {
-          text,
-          answerType: "integer",
-          correctInteger: count,
-          explanation
-        };
+        const explanation = "3^" + q + " = " + formatNumberWithSpaces(count) + ".";
+        return { text, answerType: "integer", correctInteger: count, explanation };
       }
       case 5: {
-        // Probability: neither red nor green
-        const red = randInt(3, 6);
-        const green = randInt(2, 5);
-        const other = randInt(2, 6);
+        // Existing: probability neither red nor green
+        const red = randInt(3, 7);
+        const green = randInt(2, 6);
+        const other = randInt(2, 8);
         const total = red + green + other;
-        const success = other;
-        const fr = simplifyFraction(success, total);
+        const fr = simplifyFraction(other, total);
         const text = "A bag contains " + red + " red balls, " + green +
           " green balls and " + other +
           " balls of other colours. One ball is drawn at random. What is the probability that the ball is neither red nor green?";
-        const explanation = "There are " + total +
-          " balls in total. The favourable outcomes are the " + other +
-          " balls that are neither red nor green. So the probability is " +
-          success + "/" + total + ", which simplifies to " + rationalToString(fr) + ".";
-        return {
-          text,
-          answerType: "rational",
-          correctRational: fr,
-          explanation
-        };
+        const explanation = "Favourable = other colours: " + other + "/" + total + " = " + rationalToString(fr) + ".";
+        return { text, answerType: "rational", correctRational: fr, explanation };
       }
       case 6: {
-        // Handshakes in conference
-        const n = randInt(6, 15);
+        // Existing: handshakes
+        const n = randInt(10, 25);
         const count = n * (n - 1) / 2;
-        const text = n +
-          " people meet at a conference. Each pair of people shakes hands exactly once. How many handshakes are there in total?";
-        const explanation = "Each handshake is a pair of people. The number of pairs among " +
-          n + " people is n(n − 1)/2. With n = " + n + " this gives " +
-          n + " × " + (n - 1) + " / 2 = " + formatNumberWithSpaces(count) + " handshakes.";
-        return {
-          text,
-          answerType: "integer",
-          correctInteger: count,
-          explanation
-        };
+        const text = n + " people meet at a conference. Each pair of people shakes hands exactly once. How many handshakes are there in total?";
+        const explanation = "Number of pairs: n(n - 1)/2. " + n + " x " + (n - 1) + " / 2 = " + formatNumberWithSpaces(count) + ".";
+        return { text, answerType: "integer", correctInteger: count, explanation };
       }
       case 7: {
-        // Time needed to try all codes
+        // Existing: time to try all codes, rounded hours
         const length = 4;
         const countCodes = Math.pow(10, length);
         const secondsPer = 10;
@@ -1157,34 +1173,114 @@
         const totalHours = totalSeconds / 3600;
         const roundedHours = Math.round(totalHours);
         const text = "A door code consists of " + length +
-          " digits, each from 0–9. All " + formatNumberWithSpaces(countCodes) +
+          " digits, each from 0-9. All " + formatNumberWithSpaces(countCodes) +
           " codes are equally possible. Someone tries the codes one by one without repeating, and each try takes about " +
           secondsPer + " seconds. About how many hours would it take to try all codes? Give your answer rounded to the nearest whole hour.";
-        const explanation = "There are " + formatNumberWithSpaces(countCodes) +
-          " possible codes. Each try takes " + secondsPer +
-          " seconds, so the total time is " + formatNumberWithSpaces(totalSeconds) +
-          " seconds. That is " + totalSeconds + " / 3600 ≈ " +
-          totalHours.toFixed(2) + " hours, which rounds to " +
-          formatNumberWithSpaces(roundedHours) + " hours.";
-        return {
-          text,
-          answerType: "integer",
-          correctInteger: roundedHours,
-          explanation
-        };
+        const explanation = formatNumberWithSpaces(countCodes) + " tries x " + secondsPer + " s = " +
+          formatNumberWithSpaces(totalSeconds) + " s. Hours = " + totalSeconds + "/3600 = " + totalHours.toFixed(2) +
+          ", rounds to " + formatNumberWithSpaces(roundedHours) + ".";
+        return { text, answerType: "integer", correctInteger: roundedHours, explanation };
+      }
+
+      // NEW hard variety below:
+
+      case 8: {
+        // Combinations: choose 4 from n (bigger)
+        const n = randInt(10, 16);
+        const k = 4;
+        const count = combinations(n, k);
+        const text = "A sports club has " + n + " members. A committee of " + k + " people is chosen. How many different committees are possible?";
+        const explanation = "Order does not matter: C(" + n + "," + k + ") = " + formatNumberWithSpaces(count) + ".";
+        return { text, answerType: "integer", correctInteger: count, explanation };
+      }
+      case 9: {
+        // Permutations with restrictions: 5-digit from digits, no repetition, must start with an odd digit
+        const digits = shuffle([1,2,3,4,5,6,7,8,9]).slice(0, 7);
+        const odds = digits.filter(d => d % 2 !== 0);
+        if (odds.length < 2) return genHardQuestion();
+
+        // Form 5-digit numbers from these digits, no repeat, first digit must be odd.
+        // Choose first digit among odds, then choose 4 remaining digits in order from remaining pool.
+        const firstChoices = odds.length;
+        const remaining = digits.length - 1;
+        let tailWays = 1;
+        for (let i = 0; i < 4; i++) tailWays *= (remaining - i);
+        const count = firstChoices * tailWays;
+
+        const text = "Using the digits " + digits.join(", ") + ", you form five-digit numbers with no repeated digits. The first digit must be odd. How many such numbers are possible?";
+        const explanation = "Choose an odd first digit (" + firstChoices + " ways). Then arrange 4 of the remaining " + remaining +
+          " digits: " + remaining + " x " + (remaining-1) + " x " + (remaining-2) + " x " + (remaining-3) +
+          ". Total: " + formatNumberWithSpaces(count) + ".";
+        return { text, answerType: "integer", correctInteger: count, explanation };
+      }
+      case 10: {
+        // Probability: pick blue or green
+        const red = randInt(3, 8);
+        const blue = randInt(3, 8);
+        const green = randInt(3, 8);
+        const total = red + blue + green;
+        const fav = blue + green;
+        const fr = simplifyFraction(fav, total);
+        const text = "A bag contains " + red + " red marbles, " + blue + " blue marbles, and " + green + " green marbles. One marble is drawn at random. What is the probability that it is blue or green?";
+        const explanation = "Favourable outcomes = " + blue + " + " + green + " = " + fav + ". Probability = " + fav + "/" + total + " = " + rationalToString(fr) + ".";
+        return { text, answerType: "rational", correctRational: fr, explanation };
+      }
+      case 11: {
+        // Counting rectangles on a grid (simple formula)
+        const a = randInt(2, 5);
+        const b = randInt(2, 6);
+        // rectangles in axb grid: a(a+1)/2 * b(b+1)/2
+        const count = (a * (a + 1) / 2) * (b * (b + 1) / 2);
+        const text = "A grid has " + a + " squares across and " + b + " squares down. How many rectangles are there in total (including squares)?";
+        const explanation = "Rectangles = (a(a+1)/2) x (b(b+1)/2) = (" + a + "*" + (a+1) + "/2) x (" + b + "*" + (b+1) + "/2) = " + formatNumberWithSpaces(count) + ".";
+        return { text, answerType: "integer", correctInteger: count, explanation };
+      }
+      case 12: {
+        // Arrangements of 6 people in a row, but 2 must sit together
+        const n = 6;
+        // treat the pair as 1 block: 5! arrangements, pair can swap: x2
+        const count = factorial(5) * 2;
+        const text = "Six students sit in a row. Two specific students must sit next to each other. How many different seating orders are possible?";
+        const explanation = "Treat the two students as one block: 5! ways. Inside the block there are 2 orders. Total: 5! x 2 = " + count + ".";
+        return { text, answerType: "integer", correctInteger: count, explanation };
+      }
+      case 13: {
+        // Password: 3 letters (29) then 2 digits, repetition allowed
+        const count = Math.pow(29, 3) * Math.pow(10, 2);
+        const text = "A code has 3 letters (Swedish alphabet, 29 letters) followed by 2 digits (0-9). Characters may repeat. How many codes are possible?";
+        const explanation = "29^3 for letters and 10^2 for digits. Total: 29^3 x 10^2 = " + formatNumberWithSpaces(count) + ".";
+        return { text, answerType: "integer", correctInteger: count, explanation };
+      }
+      case 14: {
+        // Choosing without replacement probability: red then red
+        const red = randInt(3, 8);
+        const blue = randInt(2, 8);
+        const total = red + blue;
+        // P(R then R) = red/total * (red-1)/(total-1)
+        const num = red * (red - 1);
+        const den = total * (total - 1);
+        const fr = simplifyFraction(num, den);
+        const text = "A bag contains " + red + " red balls and " + blue + " blue balls. Two balls are drawn WITHOUT replacement. What is the probability that both are red?";
+        const explanation = "First red: " + red + "/" + total + ". Then red again: " + (red - 1) + "/" + (total - 1) +
+          ". Multiply: (" + red + "/" + total + ") x (" + (red - 1) + "/" + (total - 1) + ") = " + num + "/" + den +
+          " = " + rationalToString(fr) + ".";
+        return { text, answerType: "rational", correctRational: fr, explanation };
       }
       default:
         return genHardQuestion();
     }
   }
 
-  function generateQuestion(difficulty) {
+  function generateQuestionRaw(difficulty) {
     if (difficulty === "easy") return genEasyQuestion();
     if (difficulty === "medium") return genMediumQuestion();
     if (difficulty === "hard") return genHardQuestion();
-    // random
     const choices = ["easy", "medium", "hard"];
-    return generateQuestion(choose(choices));
+    return generateQuestionRaw(choose(choices));
+  }
+
+  function generateQuestion(difficulty) {
+    return generateNonRepeating(difficulty);
   }
 
   // ---------- State ----------
@@ -1316,7 +1412,6 @@
 
   function handleTimeOut() {
     if (!currentQuestion || awaitingNext) return;
-    // mark as incorrect due to time
     const message = "Time is up.";
     checkAnswerInternal(null, true, message);
   }
@@ -1338,15 +1433,20 @@
     const item = document.createElement("div");
     item.className = "summary-item";
     const qIndex = incorrectLog.length;
+
     const header = document.createElement("div");
     header.innerHTML = "<strong>#" + qIndex + ":</strong> " + entry.question;
+
     const yourAns = document.createElement("div");
     yourAns.textContent = "Your answer: " + (entry.yourAnswer === null ? "(no answer)" : entry.yourAnswer);
+
     const corrAns = document.createElement("div");
     corrAns.textContent = "Correct answer: " + entry.correctAnswer;
+
     item.appendChild(header);
     item.appendChild(yourAns);
     item.appendChild(corrAns);
+
     if (entry.extra) {
       const extra = document.createElement("div");
       extra.textContent = entry.extra;
@@ -1406,24 +1506,17 @@
 
     if (currentQuestion.answerType === "integer") {
       const parsed = parseIntegerInput(userInputRaw);
-      if (parsed === null) {
-        // treat as incorrect
-        correct = false;
-      } else {
-        correct = (parsed === currentQuestion.correctInteger);
-      }
-      userDisplayAnswer = userInputRaw && userInputRaw.toString().trim() !== ""
-        ? userInputRaw.trim()
-        : "(no answer)";
+      if (parsed === null) correct = false;
+      else correct = (parsed === currentQuestion.correctInteger);
+
+      userDisplayAnswer = userInputRaw && userInputRaw.toString().trim() !== "" ? userInputRaw.trim() : "(no answer)";
       correctDisplay = formatNumberWithSpaces(currentQuestion.correctInteger);
     } else {
-      // rational
       const parsedFr = parseRationalInput(userInputRaw);
       const correctFr = currentQuestion.correctRational;
       correct = parsedFr && equalRationals(simplifyFraction(parsedFr.num, parsedFr.den), correctFr);
-      userDisplayAnswer = userInputRaw && userInputRaw.toString().trim() !== ""
-        ? userInputRaw.trim()
-        : "(no answer)";
+
+      userDisplayAnswer = userInputRaw && userInputRaw.toString().trim() !== "" ? userInputRaw.trim() : "(no answer)";
       correctDisplay = rationalToString(correctFr);
     }
 
@@ -1431,14 +1524,13 @@
     feedbackStatus.className = "feedback-line";
     const statusSpan = document.createElement("span");
     statusSpan.className = "feedback-status " + (correct ? "correct" : "incorrect");
-    if (correct) {
-      statusText = "Correct!";
-    } else {
-      statusText = fromTimer ? (timerMessage || "Incorrect (time).") : "Incorrect.";
-    }
+    if (correct) statusText = "Correct!";
+    else statusText = fromTimer ? (timerMessage || "Incorrect (time).") : "Incorrect.";
     statusSpan.textContent = statusText;
+
     const answerSpan = document.createElement("span");
     answerSpan.textContent = "Correct answer: " + correctDisplay + ".";
+
     feedbackStatus.appendChild(statusSpan);
     feedbackStatus.appendChild(answerSpan);
 
@@ -1454,6 +1546,7 @@
     showStepsBtn.className = "btn btn-secondary";
     showStepsBtn.style.marginTop = "0.25rem";
     showStepsBtn.textContent = "Show steps";
+
     const explWrapper = document.createElement("div");
     explWrapper.style.marginTop = "0.25rem";
     explWrapper.appendChild(explanationDiv);
@@ -1473,9 +1566,7 @@
       streak += 1;
       if (streak > bestStreak) bestStreak = streak;
       score += 10;
-      if (streak > 0 && streak % 5 === 0) {
-        score += 5;
-      }
+      if (streak > 0 && streak % 5 === 0) score += 5;
     } else {
       playBeep(false);
       totalAnswered += 1;
@@ -1488,16 +1579,14 @@
       });
     }
     updateStats();
-
     awaitingNext = true;
-    submitBtn.disabled = false; // still allow submit for same question, but we treat new attempts as new submissions
+    submitBtn.disabled = false;
   }
 
   function handleSubmit() {
     if (!currentQuestion) return;
     const value = answerInputEl.value;
     if (awaitingNext) {
-      // already answered once; treat as new attempt and load new question afterwards
       checkAnswerInternal(value, false);
       return;
     }
@@ -1510,49 +1599,45 @@
 
   // ---------- Worksheet mode ----------
 
-  function generateWorksheetQuestion(difficulty) {
-    const q = generateQuestion(difficulty);
-    return q;
-  }
-
   function renderWorksheet() {
     worksheetList.innerHTML = "";
     const diff = wsDifficulty.value;
     const count = parseInt(wsCount.value, 10) || 10;
-    const diffName = {
-      easy: "Easy",
-      medium: "Medium",
-      hard: "Hard",
-      random: "Random mix"
-    }[diff] || "Selected";
 
     for (let i = 0; i < count; i++) {
       const actualDiff = diff === "random" ? choose(["easy","medium","hard"]) : diff;
-      const q = generateWorksheetQuestion(actualDiff);
+
+      // For worksheet we also avoid repeats by using the same generator
+      const q = generateNonRepeating(actualDiff);
+
       const item = document.createElement("div");
       item.className = "worksheet-item";
+
       const qDiv = document.createElement("div");
       qDiv.className = "worksheet-q";
       qDiv.textContent = (i + 1) + ". " + q.text;
+
       const ansDiv = document.createElement("div");
       ansDiv.className = "worksheet-answer hidden";
+
       let correctDisplay;
-      if (q.answerType === "integer") {
-        correctDisplay = formatNumberWithSpaces(q.correctInteger);
-      } else {
-        correctDisplay = rationalToString(q.correctRational);
-      }
+      if (q.answerType === "integer") correctDisplay = formatNumberWithSpaces(q.correctInteger);
+      else correctDisplay = rationalToString(q.correctRational);
+
       ansDiv.textContent = "Answer: " + correctDisplay + ". Steps: " + q.explanation;
+
       const revealBtn = document.createElement("button");
       revealBtn.type = "button";
       revealBtn.className = "btn btn-secondary";
       revealBtn.style.marginTop = "0.2rem";
       revealBtn.textContent = "Reveal";
+
       revealBtn.addEventListener("click", function() {
         const hidden = ansDiv.classList.contains("hidden");
         ansDiv.classList.toggle("hidden", !hidden);
         revealBtn.textContent = hidden ? "Hide" : "Reveal";
       });
+
       item.appendChild(qDiv);
       item.appendChild(revealBtn);
       item.appendChild(ansDiv);
@@ -1564,9 +1649,7 @@
     const answers = worksheetList.querySelectorAll(".worksheet-answer");
     const buttons = worksheetList.querySelectorAll(".worksheet-item .btn");
     answers.forEach(a => a.classList.toggle("hidden", !show));
-    buttons.forEach(b => {
-      b.textContent = show ? "Hide" : "Reveal";
-    });
+    buttons.forEach(b => { b.textContent = show ? "Hide" : "Reveal"; });
   }
 
   // ---------- Mode switching ----------
@@ -1617,6 +1700,7 @@
   soundSwitch.addEventListener("click", function() {
     soundEnabled = toggleSwitch(soundSwitch);
   });
+
   soundSwitch.addEventListener("keydown", function(e) {
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
@@ -1648,141 +1732,87 @@
     });
   });
 
-  submitBtn.addEventListener("click", function() {
-    handleSubmit();
-  });
-
-  nextBtn.addEventListener("click", function() {
-    handleNext();
-  });
+  submitBtn.addEventListener("click", function() { handleSubmit(); });
+  nextBtn.addEventListener("click", function() { handleNext(); });
 
   answerInputEl.addEventListener("keydown", function(e) {
     if (e.key === "Enter") {
       e.preventDefault();
-      if (awaitingNext) {
-        handleNext();
-      } else {
-        handleSubmit();
-      }
+      if (awaitingNext) handleNext();
+      else handleSubmit();
     } else if (e.key === "Escape") {
       e.preventDefault();
       answerInputEl.value = "";
     }
   });
 
-  modeGameBtn.addEventListener("click", function() {
-    setMode("game");
-  });
+  modeGameBtn.addEventListener("click", function() { setMode("game"); });
+  modeWorksheetBtn.addEventListener("click", function() { setMode("worksheet"); });
 
-  modeWorksheetBtn.addEventListener("click", function() {
-    setMode("worksheet");
-  });
+  generateWorksheetBtn.addEventListener("click", function() { renderWorksheet(); });
+  revealAllBtn.addEventListener("click", function() { revealAllWorksheet(true); });
+  hideAllBtn.addEventListener("click", function() { revealAllWorksheet(false); });
 
-  generateWorksheetBtn.addEventListener("click", function() {
-    renderWorksheet();
-  });
-
-  revealAllBtn.addEventListener("click", function() {
-    revealAllWorksheet(true);
-  });
-
-  hideAllBtn.addEventListener("click", function() {
-    revealAllWorksheet(false);
-  });
-
-  // ---------- Developer tests ----------
+  // ---------- Developer tests (kept) ----------
 
   function runDevTests() {
     const tests = [];
 
-    // 1) 3 distinct digits, 2-digit numbers, no repetition -> 6
     tests.push({
       name: "3 digits, 2-digit numbers without repetition",
-      run: function() {
-        const n = 3;
-        const expected = n * (n - 1);
-        return expected === 6;
-      }
+      run: function() { return (3 * 2) === 6; }
     });
 
-    // 2) digits {4,6,8}, 2-digit with repetition -> 9
     tests.push({
       name: "{4,6,8} 2-digit numbers with repetition",
-      run: function() {
-        const n = 3;
-        const expected = n * n;
-        return expected === 9;
-      }
+      run: function() { return (3 * 3) === 9; }
     });
 
-    // 3) 4 shirts, 3 jeans -> 12 outfits
     tests.push({
       name: "4 shirts, 3 jeans",
-      run: function() {
-        return 4 * 3 === 12;
-      }
+      run: function() { return 4 * 3 === 12; }
     });
 
-    // 4) 3 starters, 4 mains, 2 desserts -> 24
     tests.push({
-      name: "3×4×2 meal combinations",
-      run: function() {
-        return 3 * 4 * 2 === 24;
-      }
+      name: "3x4x2 meal combinations",
+      run: function() { return 3 * 4 * 2 === 24; }
     });
 
-    // 5) 4-digit code digits 0-9 -> 10 000
     tests.push({
-      name: "4-digit code 0–9 with repetition",
-      run: function() {
-        return Math.pow(10,4) === 10000;
-      }
+      name: "4-digit code 0-9 with repetition",
+      run: function() { return Math.pow(10,4) === 10000; }
     });
 
-    // 6) permutations of 4 distinct digits -> 24
     tests.push({
       name: "Permutations of 4 distinct digits",
-      run: function() {
-        return factorial(4) === 24;
-      }
+      run: function() { return factorial(4) === 24; }
     });
 
-    // 7) permutations of 5 distinct digits -> 120
     tests.push({
       name: "Permutations of 5 distinct digits",
-      run: function() {
-        return factorial(5) === 120;
-      }
+      run: function() { return factorial(5) === 120; }
     });
 
-    // 8) choosing 2 from 6 -> 15
     tests.push({
       name: "Combinations C(6,2)",
-      run: function() {
-        return combinations(6,2) === 15;
-      }
+      run: function() { return combinations(6,2) === 15; }
     });
 
-    // 9) probability red: 4 red, 3 green, 3 other -> 2/5
     tests.push({
-      name: "Probability red (4 red, 3 green, 3 other)",
+      name: "Probability red (4 red, 3 green, 3 other) = 2/5",
       run: function() {
         const fr = simplifyFraction(4, 10);
         return fr.num === 2 && fr.den === 5;
       }
     });
 
-    // 10) handshakes for n=10 -> 45
     tests.push({
       name: "Handshakes n=10",
-      run: function() {
-        return 10 * 9 / 2 === 45;
-      }
+      run: function() { return 10 * 9 / 2 === 45; }
     });
 
-    // 11) licence plates 29^3 * 10^3
     tests.push({
-      name: "Licence plates 29^3 × 10^3",
+      name: "Licence plates 29^3 x 10^3",
       run: function() {
         const value = Math.pow(29,3) * Math.pow(10,3);
         return value === 24389 * 1000;
@@ -1792,11 +1822,7 @@
     devTestsContainer.innerHTML = "";
     tests.forEach(function(t, idx) {
       let passed = false;
-      try {
-        passed = !!t.run();
-      } catch (e) {
-        passed = false;
-      }
+      try { passed = !!t.run(); } catch (e) { passed = false; }
       const row = document.createElement("div");
       row.className = "dev-test";
       const nameSpan = document.createElement("span");
